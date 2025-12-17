@@ -1,0 +1,255 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: biochain_postgres
+    environment:
+      POSTGRES_USER: biochain_root
+      POSTGRES_PASSWORD: biochain-123
+      POSTGRES_DB: biochain_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U biochain_root -d biochain_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: biochain_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  biochain-node-1:
+    build: .
+    container_name: biochain_node_1
+    environment:
+      SPRING_PROFILES_ACTIVE: node1
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/biochain_db
+      SPRING_DATASOURCE_USERNAME: biochain_root
+      SPRING_DATASOURCE_PASSWORD: biochain-123
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      NETWORK_NODE_HOST: biochain-node-1
+      NETWORK_NODE_PORT: 8545
+      NETWORK_P2P_SEED_NODES: biochain-node-2:8545,biochain-node-3:8545
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+      - "8545:8545"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  biochain-node-2:
+    build: .
+    container_name: biochain_node_2
+    environment:
+      SPRING_PROFILES_ACTIVE: node2
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/biochain_db
+      SPRING_DATASOURCE_USERNAME: biochain_root
+      SPRING_DATASOURCE_PASSWORD: biochain-123
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      NETWORK_NODE_HOST: biochain-node-2
+      NETWORK_NODE_PORT: 8545
+      NETWORK_P2P_SEED_NODES: biochain-node-1:8545,biochain-node-3:8545
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+      - "8546:8545"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  biochain-node-3:
+    build: .
+    container_name: biochain_node_3
+    environment:
+      SPRING_PROFILES_ACTIVE: node3
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/biochain_db
+      SPRING_DATASOURCE_USERNAME: biochain_root
+      SPRING_DATASOURCE_PASSWORD: biochain-123
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      NETWORK_NODE_HOST: biochain-node-3
+      NETWORK_NODE_PORT: 8545
+      NETWORK_P2P_SEED_NODES: biochain-node-1:8545,biochain-node-2:8545
+      SERVER_PORT: 8082
+    ports:
+      - "8082:8082"
+      - "8547:8545"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  sonarqube-db:
+    image: postgres:15-alpine
+    container_name: biochain_sonarqube_db
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+      POSTGRES_DB: sonarqube
+    volumes:
+      - sonarqube_db_data:/var/lib/postgresql/data
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: biochain_sonarqube
+    depends_on:
+      sonarqube-db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - biochain_network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9000/api/system/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  sonar-scanner:
+    image: maven:3.9-eclipse-temurin-21-alpine
+    container_name: biochain_sonar_scanner
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+    environment:
+      SONAR_HOST_URL: http://sonarqube:9000
+      SONAR_TOKEN: ${SONAR_TOKEN:-your_token_here}
+    volumes:
+      - .:/usr/src/app
+      - maven_cache:/root/.m2
+    working_dir: /usr/src/app
+    networks:
+      - biochain_network
+    profiles:
+      - analysis
+    command: >
+      sh -c "
+        echo '⏳ Running tests with coverage...' &&
+        ./mvnw clean test jacoco:report &&
+        echo '🔍 Running SonarQube analysis...' &&
+        ./mvnw sonar:sonar \
+          -Dsonar.host.url=http://sonarqube:9000 \
+          -Dsonar.token=${SONAR_TOKEN}
+      "
+
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile.jenkins
+    container_name: biochain_jenkins
+    privileged: true
+    user: root
+    ports:
+      - "8090:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/workspace
+    networks:
+      - biochain_network
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+volumes:
+  postgres_data:
+    name: biochain_postgres_data
+  redis_data:
+    name: biochain_redis_data
+  sonarqube_db_data:
+    name: biochain_sonarqube_db_data
+  sonarqube_data:
+    name: biochain_sonarqube_data
+  sonarqube_extensions:
+    name: biochain_sonarqube_extensions
+  sonarqube_logs:
+    name: biochain_sonarqube_logs
+  maven_cache:
+    name: biochain_maven_cache
+  jenkins_data:
+    name: biochain_jenkins_data
+
+networks:
+  biochain_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
