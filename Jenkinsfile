@@ -6,8 +6,8 @@ pipeline {
     }
 
     environment {
-        SONAR_HOST = 'sonarqube'  // Using Docker service name instead of IP
-        SONAR_TOKEN = credentials('retail-token')  // Jenkins credential ID
+        SONAR_HOST = 'sonarqube'
+        SONAR_TOKEN = credentials('retail-token')
         MAVEN_OPTS = '-Xmx512m -XX:MaxMetaspaceSize=256m'
     }
 
@@ -35,6 +35,25 @@ pipeline {
                         echo "Build failed: ${e.getMessage()}"
                         currentBuild.result = 'FAILURE'
                     }
+                }
+            }
+        }
+
+        stage('Performance Testing') {
+            steps {
+                echo '⚡ Running JMeter performance tests...'
+                script {
+                    try {
+                        sh 'mvn jmeter:jmeter'
+                    } catch (Exception e) {
+                        echo "Performance tests failed: ${e.getMessage()}"
+                        unstable(message: 'Performance tests encountered issues')
+                    }
+                }
+            }
+            post {
+                always {
+                    perfReport sourceDataFiles: 'target/jmeter/results/**/*.jtl'
                 }
             }
         }

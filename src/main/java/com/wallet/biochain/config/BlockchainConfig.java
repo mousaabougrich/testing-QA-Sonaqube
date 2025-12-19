@@ -14,7 +14,8 @@ import java.math.BigDecimal;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "blockchain")
-public class BlockchainConfig {
+public class
+BlockchainConfig {
 
     /**
      * Chain ID and name
