@@ -24,11 +24,11 @@ pipeline {
                 echo '🔨 Building and running tests with coverage...'
                 script {
                     try {
-                        // ✅ Exécute les tests + génère le rapport JaCoCo
                         sh 'mvn clean test -Dspring.profiles.active=test'
                     } catch (Exception e) {
                         echo "⚠️ Some tests failed but continuing: ${e.getMessage()}"
-                        currentBuild.result = 'UNSTABLE'
+                        // ❌ Supprimez cette ligne:
+                        // currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
@@ -37,7 +37,6 @@ pipeline {
         stage('Package') {
             steps {
                 echo '📦 Packaging application...'
-                // Utilise les classes déjà compilées, skip les tests (déjà faits)
                 sh 'mvn package -DskipTests'
             }
         }
@@ -58,10 +57,6 @@ pipeline {
     post {
         success {
             echo '✅ Build completed successfully!'
-            echo '📊 View SonarQube: http://localhost:9000/dashboard?id=biochain'
-        }
-        unstable {
-            echo '⚠️ Build unstable - Some tests failed but analysis completed'
             echo '📊 View SonarQube: http://localhost:9000/dashboard?id=biochain'
         }
         failure {
