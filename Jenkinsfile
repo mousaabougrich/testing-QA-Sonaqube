@@ -37,7 +37,7 @@ pipeline {
             steps {
                 echo '🔍 Running SonarQube analysis...'
                 sh '''
-                    mvn sonar:sonar \
+                    mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
                     -Dsonar.projectKey=biochain \
                     -Dsonar.host.url=http://${SONAR_HOST}:9000 \
                     -Dsonar.token=${SONAR_TOKEN}
