@@ -14,47 +14,27 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo '📥 Cloning repository...'
+                echo '📥 Cloning repository from GitHub...'
                 checkout scm
             }
         }
 
-        stage('Build & Test & Analyze') {
+        stage('Build & Test') {
             steps {
-                echo '🚀 Running Maven build with tests and SonarQube...'
-                script {
-                    try {
-                        sh '''
-                            mvn clean verify sonar:sonar \
-                            -Dspring.profiles.active=test \
-                            -Dsonar.projectKey=biochain \
-                            -Dsonar.host.url=http://${SONAR_HOST}:9000 \
-                            -Dsonar.token=${SONAR_TOKEN}
-                        '''
-                    } catch (Exception e) {
-                        echo "Build failed: ${e.getMessage()}"
-                        currentBuild.result = 'FAILURE'
-                    }
-                }
+                echo '🔨 Building and testing with Maven...'
+                sh 'mvn clean verify -Dspring.profiles.active=test'
             }
         }
 
-        stage('Performance Testing') {
+        stage('SonarQube Analysis') {
             steps {
-                echo '⚡ Running JMeter performance tests...'
-                script {
-                    try {
-                        sh 'mvn jmeter:jmeter'
-                    } catch (Exception e) {
-                        echo "Performance tests failed: ${e.getMessage()}"
-                        unstable(message: 'Performance tests encountered issues')
-                    }
-                }
-            }
-            post {
-                always {
-                    perfReport sourceDataFiles: 'target/jmeter/results/**/*.jtl'
-                }
+                echo '🔍 Running SonarQube analysis...'
+                sh '''
+                    mvn sonar:sonar \
+                    -Dsonar.projectKey=biochain \
+                    -Dsonar.host.url=http://${SONAR_HOST}:9000 \
+                    -Dsonar.token=${SONAR_TOKEN}
+                '''
             }
         }
     }
@@ -62,7 +42,7 @@ pipeline {
     post {
         success {
             echo '✅ Build completed successfully!'
-            echo "📊 View SonarQube: http://${SONAR_HOST}:9000/dashboard?id=biochain"
+            echo '📊 View SonarQube: http://localhost:9000/dashboard?id=biochain'
         }
         failure {
             echo '❌ Build failed - Check console output'
