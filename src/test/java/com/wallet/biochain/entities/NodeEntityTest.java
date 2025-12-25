@@ -85,17 +85,19 @@ class NodeEntityTest {
     }
 
     @Test
-    void testPreUpdate_UpdatesTimestamp() throws InterruptedException {
+    void testPreUpdate_UpdatesTimestamp() {
         // Given
         node.onCreate();
+        LocalDateTime originalCreated = node.getCreatedAt();
         LocalDateTime originalUpdated = node.getUpdatedAt();
-        Thread.sleep(10);
 
         // When
         node.onUpdate();
 
         // Then
         assertNotNull(node.getUpdatedAt());
+        assertEquals(originalCreated, node.getCreatedAt()); // createdAt should not change
+        // updatedAt is set to now, so it should be equal or after original
         assertTrue(node.getUpdatedAt().isAfter(originalUpdated) ||
                    node.getUpdatedAt().isEqual(originalUpdated));
     }

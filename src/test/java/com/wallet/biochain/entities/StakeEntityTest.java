@@ -127,17 +127,19 @@ class StakeEntityTest {
     }
 
     @Test
-    void testPreUpdate_UpdatesTimestamp() throws InterruptedException {
+    void testPreUpdate_UpdatesTimestamp() {
         // Given
         stake.onCreate();
+        LocalDateTime originalCreated = stake.getCreatedAt();
         LocalDateTime originalUpdated = stake.getUpdatedAt();
-        Thread.sleep(10);
 
         // When
         stake.onUpdate();
 
         // Then
         assertNotNull(stake.getUpdatedAt());
+        assertEquals(originalCreated, stake.getCreatedAt()); // createdAt should not change
+        // updatedAt is set to now, so it should be equal or after original
         assertTrue(stake.getUpdatedAt().isAfter(originalUpdated) ||
                    stake.getUpdatedAt().isEqual(originalUpdated));
     }

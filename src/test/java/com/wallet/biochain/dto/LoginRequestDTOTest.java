@@ -6,6 +6,8 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Set;
 
@@ -35,25 +37,16 @@ class LoginRequestDTOTest {
         assertEquals("password123", loginRequest.password());
     }
 
-    @Test
-    void testBlankUsername_ValidationFails() {
+    @ParameterizedTest
+    @CsvSource({
+        "'', password123, Username is required",
+        ", password123, Username is required",
+        "testuser, '', Password is required",
+        "testuser, , Password is required"
+    })
+    void testInvalidFields_ValidationFails(String username, String password, String expectedMessage) {
         // Given
-        LoginRequestDTO loginRequest = new LoginRequestDTO("", "password123");
-
-        // When
-        Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequest);
-
-        // Then
-        assertFalse(violations.isEmpty());
-        assertEquals(1, violations.size());
-        assertTrue(violations.stream()
-                .anyMatch(v -> v.getMessage().equals("Username is required")));
-    }
-
-    @Test
-    void testNullUsername_ValidationFails() {
-        // Given
-        LoginRequestDTO loginRequest = new LoginRequestDTO(null, "password123");
+        LoginRequestDTO loginRequest = new LoginRequestDTO(username, password);
 
         // When
         Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequest);
@@ -61,36 +54,7 @@ class LoginRequestDTOTest {
         // Then
         assertFalse(violations.isEmpty());
         assertTrue(violations.stream()
-                .anyMatch(v -> v.getMessage().equals("Username is required")));
-    }
-
-    @Test
-    void testBlankPassword_ValidationFails() {
-        // Given
-        LoginRequestDTO loginRequest = new LoginRequestDTO("testuser", "");
-
-        // When
-        Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequest);
-
-        // Then
-        assertFalse(violations.isEmpty());
-        assertEquals(1, violations.size());
-        assertTrue(violations.stream()
-                .anyMatch(v -> v.getMessage().equals("Password is required")));
-    }
-
-    @Test
-    void testNullPassword_ValidationFails() {
-        // Given
-        LoginRequestDTO loginRequest = new LoginRequestDTO("testuser", null);
-
-        // When
-        Set<ConstraintViolation<LoginRequestDTO>> violations = validator.validate(loginRequest);
-
-        // Then
-        assertFalse(violations.isEmpty());
-        assertTrue(violations.stream()
-                .anyMatch(v -> v.getMessage().equals("Password is required")));
+                .anyMatch(v -> v.getMessage().equals(expectedMessage)));
     }
 
     @Test

@@ -9,6 +9,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -76,24 +79,12 @@ class JwtAuthenticationFilterTest {
         verify(filterChain, times(1)).doFilter(request, response);
     }
 
-    @Test
-    void testDoFilterInternal_NoAuthHeader_ContinuesFilterChain() throws ServletException, IOException {
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"InvalidFormat token", "Bearer "})
+    void testDoFilterInternal_InvalidAuthHeader_ContinuesFilterChain(String authHeader) throws ServletException, IOException {
         // Given
-        when(request.getHeader("Authorization")).thenReturn(null);
-
-        // When
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Then
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(filterChain, times(1)).doFilter(request, response);
-        verify(jwtUtil, never()).extractUsername(anyString());
-    }
-
-    @Test
-    void testDoFilterInternal_InvalidAuthHeaderFormat_ContinuesFilterChain() throws ServletException, IOException {
-        // Given
-        when(request.getHeader("Authorization")).thenReturn("InvalidFormat token");
+        when(request.getHeader("Authorization")).thenReturn(authHeader);
 
         // When
         jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
@@ -175,30 +166,6 @@ class JwtAuthenticationFilterTest {
         verify(userDetailsService, never()).loadUserByUsername(anyString());
     }
 
-    @Test
-    void testDoFilterInternal_EmptyAuthHeader_ContinuesFilterChain() throws ServletException, IOException {
-        // Given
-        when(request.getHeader("Authorization")).thenReturn("");
-
-        // When
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Then
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(filterChain, times(1)).doFilter(request, response);
-    }
-
-    @Test
-    void testDoFilterInternal_BearerOnlyNoToken_ContinuesFilterChain() throws ServletException, IOException {
-        // Given
-        when(request.getHeader("Authorization")).thenReturn("Bearer ");
-
-        // When
-        jwtAuthenticationFilter.doFilterInternal(request, response, filterChain);
-
-        // Then
-        verify(filterChain, times(1)).doFilter(request, response);
-    }
 
     @Test
     void testDoFilterInternal_ExistingAuthentication_SkipsTokenValidation() throws ServletException, IOException {
