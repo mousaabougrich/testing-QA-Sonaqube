@@ -82,11 +82,17 @@ public class BlockchainController {
     @Operation(summary = "Update difficulty", description = "Updates mining difficulty (admin only)")
     public ResponseEntity<Void> updateDifficulty(
             @PathVariable String chainId,
-            @RequestParam Integer difficulty) {
-        log.info("REST request to update difficulty for blockchain: {} to {}", chainId, difficulty);
+            @RequestParam(required = false) Integer difficulty,
+            @RequestBody(required = false) Integer difficultyBody) {
+        Integer diffValue = difficulty != null ? difficulty : difficultyBody;
+        log.info("REST request to update difficulty for blockchain: {} to {}", chainId, diffValue);
 
         try {
-            blockchainService.updateDifficulty(chainId, difficulty);
+            if (diffValue == null) {
+                log.error("Difficulty value is required");
+                return ResponseEntity.badRequest().build();
+            }
+            blockchainService.updateDifficulty(chainId, diffValue);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
             log.error("Failed to update difficulty", e);
@@ -159,6 +165,173 @@ public class BlockchainController {
             return ResponseEntity.ok(hasIntegrity);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    // ===================== DEFAULT ENDPOINTS (No chainId required) =====================
+
+    @GetMapping("/status")
+    @Operation(summary = "Get default blockchain status", description = "Gets status of the default/first blockchain")
+    public ResponseEntity<BlockchainStatusDTO> getDefaultBlockchainStatus() {
+        log.info("REST request to get default blockchain status");
+
+        try {
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                log.warn("No blockchain found, initializing default blockchain");
+                blockchainService.initializeBlockchain("BioChain", ConsensusType.PROOF_OF_WORK);
+                blockchains = blockchainService.getAllBlockchains();
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            BlockchainStatusDTO status = blockchainService.getBlockchainStatus(blockchain.getChainId());
+            return ResponseEntity.ok(status);
+        } catch (Exception e) {
+            log.error("Failed to get default blockchain status", e);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/total-transactions")
+    @Operation(summary = "Get total transactions", description = "Gets total transaction count from default blockchain")
+    public ResponseEntity<Integer> getDefaultTotalTransactions() {
+        log.info("REST request to get total transactions from default blockchain");
+
+        try {
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                return ResponseEntity.ok(0);
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            Integer total = blockchainService.getTotalTransactions(blockchain.getChainId());
+            return ResponseEntity.ok(total);
+        } catch (Exception e) {
+            log.error("Failed to get total transactions", e);
+            return ResponseEntity.ok(0);
+        }
+    }
+
+    @GetMapping("/default")
+    @Operation(summary = "Get default blockchain", description = "Gets the default/first blockchain")
+    public ResponseEntity<Blockchain> getDefaultBlockchain() {
+        log.info("REST request to get default blockchain");
+
+        List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+        if (blockchains.isEmpty()) {
+            log.info("No blockchain found, initializing default blockchain");
+            Blockchain blockchain = blockchainService.initializeBlockchain("BioChain", ConsensusType.PROOF_OF_WORK);
+            return ResponseEntity.ok(blockchain);
+        }
+
+        return ResponseEntity.ok(blockchains.get(0));
+    }
+
+    @PutMapping("/difficulty")
+    @Operation(summary = "Update default blockchain difficulty", description = "Updates mining difficulty for default blockchain")
+    public ResponseEntity<Void> updateDefaultDifficulty(
+            @RequestParam(required = false) Integer difficulty,
+            @RequestBody(required = false) Integer difficultyBody) {
+        Integer diffValue = difficulty != null ? difficulty : difficultyBody;
+        log.info("REST request to update difficulty for default blockchain to {}", diffValue);
+
+        try {
+            if (diffValue == null) {
+                log.error("Difficulty value is required");
+                return ResponseEntity.badRequest().build();
+            }
+
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            blockchainService.updateDifficulty(blockchain.getChainId(), diffValue);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            log.error("Failed to update difficulty", e);
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @GetMapping("/height")
+    @Operation(summary = "Get default blockchain height", description = "Gets current height of default blockchain")
+    public ResponseEntity<Integer> getDefaultBlockchainHeight() {
+        log.info("REST request to get default blockchain height");
+
+        try {
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                return ResponseEntity.ok(0);
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            Integer height = blockchainService.getBlockchainHeight(blockchain.getChainId());
+            return ResponseEntity.ok(height);
+        } catch (Exception e) {
+            log.error("Failed to get blockchain height", e);
+            return ResponseEntity.ok(0);
+        }
+    }
+
+    @GetMapping("/validate")
+    @Operation(summary = "Validate default blockchain", description = "Validates entire default blockchain integrity")
+    public ResponseEntity<Boolean> validateDefaultBlockchain() {
+        log.info("REST request to validate default blockchain");
+
+        try {
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                return ResponseEntity.ok(true);
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            boolean isValid = blockchainService.validateBlockchain(blockchain.getChainId());
+            return ResponseEntity.ok(isValid);
+        } catch (Exception e) {
+            log.error("Failed to validate blockchain", e);
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    @GetMapping("/integrity")
+    @Operation(summary = "Check default blockchain integrity", description = "Checks default blockchain integrity")
+    public ResponseEntity<Boolean> checkDefaultIntegrity() {
+        log.info("REST request to check default blockchain integrity");
+
+        try {
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                return ResponseEntity.ok(true);
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            boolean hasIntegrity = blockchainService.checkIntegrity(blockchain.getChainId());
+            return ResponseEntity.ok(hasIntegrity);
+        } catch (Exception e) {
+            log.error("Failed to check integrity", e);
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    @PostMapping("/sync")
+    @Operation(summary = "Synchronize default blockchain", description = "Triggers default blockchain synchronization")
+    public ResponseEntity<Void> synchronizeDefaultBlockchain() {
+        log.info("REST request to synchronize default blockchain");
+
+        try {
+            List<Blockchain> blockchains = blockchainService.getAllBlockchains();
+            if (blockchains.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Blockchain blockchain = blockchains.get(0);
+            blockchainService.synchronizeBlockchain(blockchain.getChainId());
+            return ResponseEntity.accepted().build();
+        } catch (Exception e) {
+            log.error("Failed to synchronize blockchain", e);
+            return ResponseEntity.badRequest().build();
         }
     }
 }

@@ -80,18 +80,49 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     @Transactional(readOnly = true)
     public BlockchainStatusDTO getBlockchainStatus(String chainId) {
-        Blockchain blockchain = blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"));
+        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);
 
         Integer totalTx = transactionRepository.findAll().size();
         Integer pendingTx = transactionRepository.findByStatus(
                 com.wallet.biochain.enums.TransactionStatus.PENDING).size();
 
+        // Try to find latest block by blockchain ID first, fallback to global latest block
         Optional<Block> latestBlock = blockRepository.findLatestBlockByBlockchainId(blockchain.getId());
+        if (latestBlock.isEmpty()) {
+            latestBlock = blockRepository.findLatestBlock();
+        }
+
         Integer avgBlockTime = calculateAverageBlockTime(blockchain.getId());
+
+        // Update currentHeight from the actual latest block
+        if (latestBlock.isPresent()) {
+            blockchain.setCurrentHeight(latestBlock.get().getBlockIndex());
+        }
 
         return blockchainMapper.toStatusDTO(blockchain, totalTx, pendingTx, avgBlockTime,
                 latestBlock.orElse(null));
+    }
+
+    /**
+     * Helper method to find blockchain by chainId, name, or partial match
+     */
+    private Blockchain findBlockchainByChainIdOrName(String identifier) {
+        // Try exact match by chainId
+        return blockchainRepository.findByChainId(identifier)
+                // Try exact match by name
+                .or(() -> blockchainRepository.findByName(identifier))
+                // Try partial match (chainId starts with identifier)
+                .or(() -> blockchainRepository.findAll().stream()
+                        .filter(b -> b.getChainId().startsWith(identifier) || b.getName().toLowerCase().contains(identifier.toLowerCase()))
+                        .findFirst())
+                // Return first blockchain if identifier is common like "biochain-main" or "default"
+                .or(() -> {
+                    if (identifier.equals("biochain-main") || identifier.equals("default")) {
+                        return blockchainRepository.findAll().stream().findFirst();
+                    }
+                    return Optional.empty();
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found: " + identifier));
     }
 
     @Override
@@ -103,8 +134,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     @Transactional
     public void addBlockToChain(String chainId, Block block) {
-        Blockchain blockchain = blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"));
+        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);
 
         if (block.getBlockIndex() != blockchain.getCurrentHeight() + 1) {
             throw new IllegalStateException("Invalid block index");
@@ -120,8 +150,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     @Transactional(readOnly = true)
     public boolean validateBlockchain(String chainId) {
-        Blockchain blockchain = blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"));
+        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);
 
         List<Block> blocks = blockRepository.findByBlockchainId(blockchain.getId());
         return blockService.validateBlockchain(blocks);
@@ -130,16 +159,18 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     @Transactional(readOnly = true)
     public Integer getBlockchainHeight(String chainId) {
-        return blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"))
-                .getCurrentHeight();
+        // Try to get actual height from latest block
+        Optional<Block> latestBlock = blockRepository.findLatestBlock();
+        if (latestBlock.isPresent()) {
+            return latestBlock.get().getBlockIndex();
+        }
+        return findBlockchainByChainIdOrName(chainId).getCurrentHeight();
     }
 
     @Override
     @Transactional
     public void updateDifficulty(String chainId, Integer newDifficulty) {
-        Blockchain blockchain = blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"));
+        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);
 
         blockchain.setDifficulty(newDifficulty);
         blockchainRepository.save(blockchain);
@@ -148,8 +179,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     @Transactional(readOnly = true)
     public Block getGenesisBlock(String chainId) {
-        Blockchain blockchain = blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"));
+        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);
 
         return blockRepository.findByHash(blockchain.getGenesisHash())
                 .orElseThrow(() -> new IllegalStateException("Genesis block not found"));
@@ -164,8 +194,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     @Transactional(readOnly = true)
     public Integer getTotalTransactions(String chainId) {
-        Blockchain blockchain = blockchainRepository.findByChainId(chainId)
-                .orElseThrow(() -> new IllegalArgumentException("Blockchain not found"));
+        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);
 
         return blockRepository.findByBlockchainId(blockchain.getId()).stream()
                 .mapToInt(block -> block.getTransactions() != null ? block.getTransactions().size() : 0)

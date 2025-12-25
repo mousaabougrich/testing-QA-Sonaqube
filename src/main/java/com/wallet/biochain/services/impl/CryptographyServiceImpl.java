@@ -8,8 +8,10 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -20,13 +22,15 @@ import java.util.Base64;
 @Service
 public class CryptographyServiceImpl implements CryptographyService {
 
-    private static final String RSA_ALGORITHM = "RSA";
-    private static final String AES_ALGORITHM = "AES";
+    private static final String RSA_ALGORITHM = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+    private static final String AES_ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String SHA_256 = "SHA-256";
     private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
     private static final int KEY_SIZE = 2048;
     private static final int AES_KEY_SIZE = 256;
     private static final int ITERATION_COUNT = 65536;
+    private static final int SALT_LENGTH = 32; // 256 bits
+    private static final int IV_LENGTH = 16; // 128 bits for AES
 
     static {
         Security.addProvider(new BouncyCastleProvider());
@@ -35,7 +39,7 @@ public class CryptographyServiceImpl implements CryptographyService {
     @Override
     public KeyPair generateKeyPair() {
         try {
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance(RSA_ALGORITHM);
+            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
             keyGen.initialize(KEY_SIZE, new SecureRandom());
             KeyPair keyPair = keyGen.generateKeyPair();
             log.info("Generated RSA key pair successfully");
@@ -148,7 +152,7 @@ public class CryptographyServiceImpl implements CryptographyService {
         try {
             byte[] decoded = Base64.getDecoder().decode(publicKeyString);
             X509EncodedKeySpec spec = new X509EncodedKeySpec(decoded);
-            KeyFactory keyFactory = KeyFactory.getInstance(RSA_ALGORITHM);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             return keyFactory.generatePublic(spec);
         } catch (Exception e) {
             log.error("Failed to decode public key", e);
@@ -161,7 +165,7 @@ public class CryptographyServiceImpl implements CryptographyService {
         try {
             byte[] decoded = Base64.getDecoder().decode(privateKeyString);
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
-            KeyFactory keyFactory = KeyFactory.getInstance(RSA_ALGORITHM);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
             return keyFactory.generatePrivate(spec);
         } catch (Exception e) {
             log.error("Failed to decode private key", e);
@@ -172,11 +176,22 @@ public class CryptographyServiceImpl implements CryptographyService {
     @Override
     public String encryptPrivateKey(String privateKey, String password) {
         try {
-            SecretKey secretKey = deriveKeyFromPassword(password);
+            // Generate random salt and IV
+            byte[] salt = generateRandomBytes(SALT_LENGTH);
+            byte[] iv = generateRandomBytes(IV_LENGTH);
+
+            SecretKey secretKey = deriveKeyFromPassword(password, salt);
             Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, new IvParameterSpec(iv));
             byte[] encryptedBytes = cipher.doFinal(privateKey.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(encryptedBytes);
+
+            // Combine salt + IV + encrypted data
+            ByteBuffer buffer = ByteBuffer.allocate(salt.length + iv.length + encryptedBytes.length);
+            buffer.put(salt);
+            buffer.put(iv);
+            buffer.put(encryptedBytes);
+
+            return Base64.getEncoder().encodeToString(buffer.array());
         } catch (Exception e) {
             log.error("Failed to encrypt private key with password", e);
             throw new RuntimeException("Failed to encrypt private key", e);
@@ -186,10 +201,22 @@ public class CryptographyServiceImpl implements CryptographyService {
     @Override
     public String decryptPrivateKey(String encryptedPrivateKey, String password) {
         try {
-            SecretKey secretKey = deriveKeyFromPassword(password);
+            byte[] combined = Base64.getDecoder().decode(encryptedPrivateKey);
+            ByteBuffer buffer = ByteBuffer.wrap(combined);
+
+            // Extract salt, IV, and encrypted data
+            byte[] salt = new byte[SALT_LENGTH];
+            byte[] iv = new byte[IV_LENGTH];
+            buffer.get(salt);
+            buffer.get(iv);
+            byte[] encryptedBytes = new byte[buffer.remaining()];
+            buffer.get(encryptedBytes);
+
+            SecretKey secretKey = deriveKeyFromPassword(password, salt);
             Cipher cipher = Cipher.getInstance(AES_ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, secretKey);
-            byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedPrivateKey));
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+            byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+
             return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("Failed to decrypt private key with password", e);
@@ -198,14 +225,24 @@ public class CryptographyServiceImpl implements CryptographyService {
     }
 
     /**
-     * Derive AES key from password using PBKDF2
+     * Derive AES key from password using PBKDF2 with a random salt
      */
-    private SecretKey deriveKeyFromPassword(String password) throws Exception {
-        byte[] salt = "blockchain-wallet-salt".getBytes(StandardCharsets.UTF_8); // In production, use random salt
+    private SecretKey deriveKeyFromPassword(String password, byte[] salt) throws Exception {
         PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATION_COUNT, AES_KEY_SIZE);
         SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
         byte[] keyBytes = factory.generateSecret(spec).getEncoded();
-        return new SecretKeySpec(keyBytes, AES_ALGORITHM);
+        spec.clearPassword(); // Clear sensitive data
+        return new SecretKeySpec(keyBytes, "AES");
+    }
+
+    /**
+     * Generate cryptographically secure random bytes
+     */
+    private byte[] generateRandomBytes(int length) {
+        byte[] bytes = new byte[length];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(bytes);
+        return bytes;
     }
 
     /**
