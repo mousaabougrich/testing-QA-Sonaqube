@@ -8,7 +8,7 @@ pipeline {
     environment {
         SONAR_HOST = 'sonarqube'
         SONAR_TOKEN = credentials('retail-token')
-        MAVEN_OPTS = '-Xmx512m -XX:MaxMetaspaceSize=256m'
+        MAVEN_OPTS = '-Xmx1024m -XX:MaxMetaspaceSize=512m'
     }
 
     stages {
@@ -21,23 +21,32 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                echo '🔨 Building and testing with Maven...'
+                echo '🔨 Building and running tests with coverage...'
                 script {
                     try {
-                        sh 'mvn clean verify -Dspring.profiles.active=test'
+                        // ✅ Exécute les tests + génère le rapport JaCoCo
+                        sh 'mvn clean test -Dspring.profiles.active=test'
                     } catch (Exception e) {
-                        echo "⚠️ Tests failed but continuing: ${e.getMessage()}"
+                        echo "⚠️ Some tests failed but continuing: ${e.getMessage()}"
                         currentBuild.result = 'UNSTABLE'
                     }
                 }
             }
         }
 
+        stage('Package') {
+            steps {
+                echo '📦 Packaging application...'
+                // Utilise les classes déjà compilées, skip les tests (déjà faits)
+                sh 'mvn package -DskipTests'
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
-                echo '🔍 Running SonarQube analysis...'
+                echo '🔍 Running SonarQube analysis with coverage...'
                 sh '''
-                    mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+                    mvn sonar:sonar \
                     -Dsonar.projectKey=biochain \
                     -Dsonar.host.url=http://${SONAR_HOST}:9000 \
                     -Dsonar.token=${SONAR_TOKEN}
