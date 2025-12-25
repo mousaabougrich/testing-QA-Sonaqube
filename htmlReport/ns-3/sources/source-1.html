@@ -1,0 +1,177 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > AdminController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: AdminController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">AdminController</td>
+<td class="coverageStat">
+  <span class="percent">
+    20%
+  </span>
+  <span class="absValue">
+    (1/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6,7%
+  </span>
+  <span class="absValue">
+    (1/15)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">AdminController$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    20%
+  </span>
+  <span class="absValue">
+    (1/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    6,7%
+  </span>
+  <span class="absValue">
+    (1/15)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.UserDTO;
+&nbsp;import com.wallet.biochain.enums.Role;
+&nbsp;import com.wallet.biochain.security.UserDetailsImpl;
+&nbsp;import com.wallet.biochain.services.UserService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.security.access.prepost.PreAuthorize;
+&nbsp;import org.springframework.security.core.context.SecurityContextHolder;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/admin&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@PreAuthorize(&quot;hasRole(&#39;ADMIN&#39;)&quot;)
+&nbsp;@Tag(name = &quot;Admin&quot;, description = &quot;Admin management endpoints&quot;)
+&nbsp;public class AdminController {
+&nbsp;
+&nbsp;    private final UserService userService;
+&nbsp;
+&nbsp;    @GetMapping(&quot;/users&quot;)
+&nbsp;    @Operation(summary = &quot;Get all users&quot;, description = &quot;Retrieves all users (Admin only)&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;UserDTO&gt;&gt; getAllUsers() {
+<b class="nc">&nbsp;        log.info(&quot;Admin request to get all users&quot;);</b>
+<b class="nc">&nbsp;        List&lt;UserDTO&gt; users = userService.getAllUsers();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(users);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/users/{userId}/roles&quot;)
+&nbsp;    @Operation(summary = &quot;Assign role to user&quot;, description = &quot;Assigns a role to a user (Admin only)&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; assignRole(@PathVariable Long userId, @RequestParam Role role) {
+<b class="nc">&nbsp;        log.info(&quot;Admin request to assign role {} to user {}&quot;, role, userId);</b>
+<b class="nc">&nbsp;        userService.assignRole(userId, role);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/users/{userId}/roles&quot;)
+&nbsp;    @Operation(summary = &quot;Remove role from user&quot;, description = &quot;Removes a role from a user (Admin only)&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; removeRole(@PathVariable Long userId, @RequestParam Role role) {
+<b class="nc">&nbsp;        log.info(&quot;Admin request to remove role {} from user {}&quot;, role, userId);</b>
+<b class="nc">&nbsp;        userService.removeRole(userId, role);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/me&quot;)
+&nbsp;    @Operation(summary = &quot;Get current admin info&quot;, description = &quot;Returns current authenticated admin information&quot;)
+&nbsp;    public ResponseEntity&lt;UserDTO&gt; getCurrentAdmin() {
+<b class="nc">&nbsp;        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext()</b>
+<b class="nc">&nbsp;                .getAuthentication().getPrincipal();</b>
+&nbsp;        
+<b class="nc">&nbsp;        return userService.getUserById(userDetails.getId())</b>
+<b class="nc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

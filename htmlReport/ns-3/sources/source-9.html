@@ -1,0 +1,339 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NodeController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: NodeController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NodeController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88,9%
+  </span>
+  <span class="absValue">
+    (16/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76,5%
+  </span>
+  <span class="absValue">
+    (52/68)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.NodeConnectionRequestDTO;
+&nbsp;import com.wallet.biochain.dto.NodeInfoDTO;
+&nbsp;import com.wallet.biochain.dto.PeerListDTO;
+&nbsp;import com.wallet.biochain.enums.NodeStatus;
+&nbsp;import com.wallet.biochain.services.NodeService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/nodes&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@Tag(name = &quot;Node&quot;, description = &quot;Node management endpoints for P2P network&quot;)
+&nbsp;public class NodeController {
+&nbsp;
+&nbsp;    private final NodeService nodeService;
+&nbsp;
+&nbsp;    @PostMapping(&quot;/register&quot;)
+&nbsp;    @Operation(summary = &quot;Register node&quot;, description = &quot;Registers a new node in the network&quot;)
+&nbsp;    public ResponseEntity&lt;NodeInfoDTO&gt; registerNode(@RequestBody NodeConnectionRequestDTO request) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to register node: {}&quot;, request.nodeId());</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            NodeInfoDTO node = nodeService.registerNode(request);</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.CREATED).body(node);</b>
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;Failed to register node&quot;, e);</b>
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(summary = &quot;Get node by ID&quot;, description = &quot;Retrieves node information by ID&quot;)
+&nbsp;    public ResponseEntity&lt;NodeInfoDTO&gt; getNodeById(@PathVariable Long id) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get node by ID: {}&quot;, id);</b>
+&nbsp;
+<b class="fc">&nbsp;        return nodeService.getNodeById(id)</b>
+<b class="fc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="fc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/node-id/{nodeId}&quot;)
+&nbsp;    @Operation(summary = &quot;Get node by node ID&quot;, description = &quot;Retrieves node by unique node ID&quot;)
+&nbsp;    public ResponseEntity&lt;NodeInfoDTO&gt; getNodeByNodeId(@PathVariable String nodeId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get node by node ID: {}&quot;, nodeId);</b>
+&nbsp;
+<b class="fc">&nbsp;        return nodeService.getNodeByNodeId(nodeId)</b>
+<b class="fc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="fc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping
+&nbsp;    @Operation(summary = &quot;Get all nodes&quot;, description = &quot;Retrieves all registered nodes&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;NodeInfoDTO&gt;&gt; getAllNodes() {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get all nodes&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;NodeInfoDTO&gt; nodes = nodeService.getAllNodes();</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(nodes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/active&quot;)
+&nbsp;    @Operation(summary = &quot;Get active nodes&quot;, description = &quot;Retrieves only active nodes&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;NodeInfoDTO&gt;&gt; getActiveNodes() {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get active nodes&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;NodeInfoDTO&gt; nodes = nodeService.getActiveNodes();</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(nodes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/status/{status}&quot;)
+&nbsp;    @Operation(summary = &quot;Get nodes by status&quot;, description = &quot;Retrieves nodes filtered by status&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;NodeInfoDTO&gt;&gt; getNodesByStatus(@PathVariable NodeStatus status) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get nodes by status: {}&quot;, status);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;NodeInfoDTO&gt; nodes = nodeService.getNodesByStatus(status);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(nodes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/{nodeId}/status&quot;)
+&nbsp;    @Operation(summary = &quot;Update node status&quot;, description = &quot;Updates the status of a node&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; updateNodeStatus(
+&nbsp;            @PathVariable String nodeId,
+&nbsp;            @RequestParam NodeStatus status) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to update node status: {} to {}&quot;, nodeId, status);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            nodeService.updateNodeStatus(nodeId, status);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="fc">&nbsp;            log.error(&quot;Node not found: {}&quot;, nodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/{nodeId}/block-height&quot;)
+&nbsp;    @Operation(summary = &quot;Update block height&quot;, description = &quot;Updates node&#39;s blockchain height&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; updateBlockHeight(
+&nbsp;            @PathVariable String nodeId,
+&nbsp;            @RequestParam Integer blockHeight) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to update block height for node: {} to {}&quot;, nodeId, blockHeight);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            nodeService.updateBlockHeight(nodeId, blockHeight);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{nodeId}/connect/{peerNodeId}&quot;)
+&nbsp;    @Operation(summary = &quot;Connect to peer&quot;, description = &quot;Connects a node to another peer&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; connectToPeer(
+&nbsp;            @PathVariable String nodeId,
+&nbsp;            @PathVariable String peerNodeId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to connect node {} to peer {}&quot;, nodeId, peerNodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            nodeService.connectToPeer(nodeId, peerNodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to connect nodes&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{nodeId}/disconnect/{peerNodeId}&quot;)
+&nbsp;    @Operation(summary = &quot;Disconnect from peer&quot;, description = &quot;Disconnects a node from a peer&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; disconnectFromPeer(
+&nbsp;            @PathVariable String nodeId,
+&nbsp;            @PathVariable String peerNodeId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to disconnect node {} from peer {}&quot;, nodeId, peerNodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            nodeService.disconnectFromPeer(nodeId, peerNodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{nodeId}/peers&quot;)
+&nbsp;    @Operation(summary = &quot;Get peer list&quot;, description = &quot;Gets list of peers connected to a node&quot;)
+&nbsp;    public ResponseEntity&lt;PeerListDTO&gt; getPeerList(@PathVariable String nodeId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get peer list for node: {}&quot;, nodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            PeerListDTO peerList = nodeService.getPeerList(nodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(peerList);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{nodeId}/ping&quot;)
+&nbsp;    @Operation(summary = &quot;Ping node&quot;, description = &quot;Pings a node to check if it&#39;s alive&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; pingNode(@PathVariable String nodeId) {
+<b class="fc">&nbsp;        log.debug(&quot;REST request to ping node: {}&quot;, nodeId);</b>
+&nbsp;
+<b class="fc">&nbsp;        boolean isAlive = nodeService.pingNode(nodeId);</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(isAlive);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{nodeId}/latency&quot;)
+&nbsp;    @Operation(summary = &quot;Get node latency&quot;, description = &quot;Measures network latency to a node&quot;)
+&nbsp;    public ResponseEntity&lt;Long&gt; getNodeLatency(@PathVariable String nodeId) {
+<b class="fc">&nbsp;        log.debug(&quot;REST request to get latency for node: {}&quot;, nodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            Long latency = nodeService.getNodeLatency(nodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(latency);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{nodeId}/trust&quot;)
+&nbsp;    @Operation(summary = &quot;Trust node&quot;, description = &quot;Marks a node as trusted&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; trustNode(@PathVariable String nodeId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to trust node: {}&quot;, nodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            nodeService.trustNode(nodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{nodeId}/untrust&quot;)
+&nbsp;    @Operation(summary = &quot;Untrust node&quot;, description = &quot;Removes trusted status from a node&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; untrustNode(@PathVariable String nodeId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to untrust node: {}&quot;, nodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            nodeService.untrustNode(nodeId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/stale&quot;)
+&nbsp;    @Operation(summary = &quot;Remove stale nodes&quot;, description = &quot;Removes nodes that haven&#39;t responded&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; removeStaleNodes() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to remove stale nodes&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        nodeService.removeStaleNodes();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{nodeId}/sync/{peerNodeId}&quot;)
+&nbsp;    @Operation(summary = &quot;Synchronize with peer&quot;, description = &quot;Triggers sync between two nodes&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; synchronizeWithPeer(
+&nbsp;            @PathVariable String nodeId,
+&nbsp;            @PathVariable String peerNodeId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to sync node {} with peer {}&quot;, nodeId, peerNodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            nodeService.synchronizeWithPeer(nodeId, peerNodeId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.accepted().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to synchronize nodes&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

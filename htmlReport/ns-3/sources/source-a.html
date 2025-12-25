@@ -1,0 +1,289 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > P2PNetworkController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: P2PNetworkController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">P2PNetworkController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    7,7%
+  </span>
+  <span class="absValue">
+    (1/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    1,7%
+  </span>
+  <span class="absValue">
+    (1/59)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.NetworkStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.services.P2PNetworkService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/p2p&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@Tag(name = &quot;P2P Network&quot;, description = &quot;Peer-to-peer network communication endpoints&quot;)
+&nbsp;public class P2PNetworkController {
+&nbsp;
+&nbsp;    private final P2PNetworkService p2pNetworkService;
+&nbsp;
+&nbsp;    @GetMapping(&quot;/status&quot;)
+&nbsp;    @Operation(summary = &quot;Get network status&quot;, description = &quot;Gets current P2P network status and statistics&quot;)
+&nbsp;    public ResponseEntity&lt;NetworkStatusDTO&gt; getNetworkStatus() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get P2P network status&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        NetworkStatusDTO status = p2pNetworkService.getNetworkStatus();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(status);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/connect&quot;)
+&nbsp;    @Operation(summary = &quot;Connect to network&quot;, description = &quot;Connects to the P2P blockchain network&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; connectToNetwork() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to connect to P2P network&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.connectToNetwork();</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to connect to network&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/disconnect&quot;)
+&nbsp;    @Operation(summary = &quot;Disconnect from network&quot;, description = &quot;Disconnects from the P2P network&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; disconnectFromNetwork() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to disconnect from P2P network&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.disconnectFromNetwork();</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to disconnect from network&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/peers/discover&quot;)
+&nbsp;    @Operation(summary = &quot;Discover peers&quot;, description = &quot;Discovers available peers in the network&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;String&gt;&gt; discoverPeers() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to discover peers&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;String&gt; peers = p2pNetworkService.discoverPeers();</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(peers);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to discover peers&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/broadcast/block&quot;)
+&nbsp;    @Operation(summary = &quot;Broadcast block&quot;, description = &quot;Broadcasts a block to all connected peers&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; broadcastBlock(@RequestBody Block block) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to broadcast block: {}&quot;, block.getBlockIndex());</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.broadcastBlock(block);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast block&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/broadcast/transaction&quot;)
+&nbsp;    @Operation(summary = &quot;Broadcast transaction&quot;, description = &quot;Broadcasts a transaction to all peers&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; broadcastTransaction(@RequestBody Transaction transaction) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to broadcast transaction: {}&quot;, transaction.getTransactionHash());</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.broadcastTransaction(transaction);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast transaction&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/message/send&quot;)
+&nbsp;    @Operation(summary = &quot;Send message to peer&quot;, description = &quot;Sends a message to a specific peer&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; sendMessageToPeer(
+&nbsp;            @RequestParam String nodeId,
+&nbsp;            @RequestParam String message) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to send message to peer: {}&quot;, nodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.sendMessageToPeer(nodeId, message);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Peer not found: {}&quot;, nodeId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to send message&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/message/broadcast&quot;)
+&nbsp;    @Operation(summary = &quot;Broadcast message&quot;, description = &quot;Broadcasts a message to all peers&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; broadcastMessage(@RequestParam String message) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to broadcast message to all peers&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.broadcastMessage(message);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast message&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/blockchain/request&quot;)
+&nbsp;    @Operation(summary = &quot;Request blockchain from peer&quot;, description = &quot;Requests blockchain data from a peer&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; requestBlockchainFromPeer(@RequestParam String nodeId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to request blockchain from peer: {}&quot;, nodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.requestBlockchainFromPeer(nodeId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.accepted().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Peer not found: {}&quot;, nodeId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to request blockchain&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/synchronize&quot;)
+&nbsp;    @Operation(summary = &quot;Synchronize with network&quot;, description = &quot;Synchronizes blockchain with the network&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; synchronizeWithNetwork() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to synchronize with network&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            p2pNetworkService.synchronizeWithNetwork();</b>
+<b class="nc">&nbsp;            return ResponseEntity.accepted().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to synchronize with network&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/health&quot;)
+&nbsp;    @Operation(summary = &quot;Check network health&quot;, description = &quot;Checks if the P2P network is healthy&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; isNetworkHealthy() {
+<b class="nc">&nbsp;        log.debug(&quot;REST request to check network health&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean healthy = p2pNetworkService.isNetworkHealthy();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(healthy);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/peers/count&quot;)
+&nbsp;    @Operation(summary = &quot;Get connected peers count&quot;, description = &quot;Gets the number of connected peers&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getConnectedPeersCount() {
+<b class="nc">&nbsp;        log.debug(&quot;REST request to get connected peers count&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        Integer count = p2pNetworkService.getConnectedPeersCount();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(count);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

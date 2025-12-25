@@ -1,0 +1,147 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > P2PNetworkService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: P2PNetworkService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">P2PNetworkService$MockitoMock$TK7JaoNp</td>
+  </tr>
+  <tr>
+    <td class="name">P2PNetworkService$MockitoMock$TK7JaoNp$auxiliary$hm42Njj0</td>
+  </tr>
+  <tr>
+    <td class="name">P2PNetworkService$MockitoMock$TK7JaoNp$auxiliary$nelOf1jn</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.NetworkStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;public interface P2PNetworkService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Broadcast block to network
+&nbsp;     */
+&nbsp;    void broadcastBlock(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Broadcast transaction to network
+&nbsp;     */
+&nbsp;    void broadcastTransaction(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Discover peers
+&nbsp;     */
+&nbsp;    List&lt;String&gt; discoverPeers();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Connect to network
+&nbsp;     */
+&nbsp;    void connectToNetwork();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Disconnect from network
+&nbsp;     */
+&nbsp;    void disconnectFromNetwork();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get network status
+&nbsp;     */
+&nbsp;    NetworkStatusDTO getNetworkStatus();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Send message to peer
+&nbsp;     */
+&nbsp;    void sendMessageToPeer(String nodeId, String message);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Broadcast message to all peers
+&nbsp;     */
+&nbsp;    void broadcastMessage(String message);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Request blockchain from peer
+&nbsp;     */
+&nbsp;    void requestBlockchainFromPeer(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Synchronize with network
+&nbsp;     */
+&nbsp;    void synchronizeWithNetwork();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check network health
+&nbsp;     */
+&nbsp;    boolean isNetworkHealthy();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get connected peers count
+&nbsp;     */
+&nbsp;    Integer getConnectedPeersCount();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

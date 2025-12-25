@@ -1,0 +1,240 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ConsensusServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: ConsensusServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ConsensusServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    87,5%
+  </span>
+  <span class="absValue">
+    (7/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76,9%
+  </span>
+  <span class="absValue">
+    (10/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86,2%
+  </span>
+  <span class="absValue">
+    (25/29)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">ConsensusServiceImpl$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    88,9%
+  </span>
+  <span class="absValue">
+    (8/9)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    76,9%
+  </span>
+  <span class="absValue">
+    (10/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    86,7%
+  </span>
+  <span class="absValue">
+    (26/30)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.enums.ConsensusType;
+&nbsp;import com.wallet.biochain.services.ConsensusService;
+&nbsp;import com.wallet.biochain.services.PoSConsensusService;
+&nbsp;import com.wallet.biochain.services.PoWConsensusService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class ConsensusServiceImpl implements ConsensusService {
+&nbsp;
+&nbsp;    private final PoWConsensusService powConsensusService;
+&nbsp;    private final PoSConsensusService posConsensusService;
+&nbsp;
+&nbsp;    private ConsensusType currentConsensusType = ConsensusType.PROOF_OF_WORK;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateBlock(Block block) {
+<b class="fc">&nbsp;        log.debug(&quot;Validating block {} with {} consensus&quot;,</b>
+<b class="fc">&nbsp;                block.getBlockIndex(), currentConsensusType);</b>
+&nbsp;
+<b class="pc">&nbsp;        return switch (currentConsensusType) {</b>
+<b class="fc">&nbsp;            case PROOF_OF_WORK -&gt; validateWithPoW(block);</b>
+<b class="nc">&nbsp;            case PROOF_OF_STAKE -&gt; validateWithPoS(block);</b>
+<b class="pc">&nbsp;            case HYBRID -&gt; validateWithPoW(block) &amp;&amp; validateWithPoS(block);</b>
+&nbsp;        };
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void setConsensusType(ConsensusType consensusType) {
+<b class="fc">&nbsp;        log.info(&quot;Switching consensus from {} to {}&quot;, currentConsensusType, consensusType);</b>
+<b class="fc">&nbsp;        this.currentConsensusType = consensusType;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public ConsensusType getCurrentConsensusType() {
+<b class="nc">&nbsp;        return currentConsensusType;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateWithPoW(Block block) {
+&nbsp;        try {
+<b class="fc">&nbsp;            boolean isValid = powConsensusService.validateProofOfWork(block, block.getDifficulty());</b>
+<b class="fc">&nbsp;            log.debug(&quot;PoW validation result: {}&quot;, isValid);</b>
+<b class="fc">&nbsp;            return isValid;</b>
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;PoW validation failed&quot;, e);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateWithPoS(Block block) {
+&nbsp;        try {
+<b class="fc">&nbsp;            String minerAddress = block.getMinerAddress();</b>
+<b class="pc">&nbsp;            if (minerAddress == null || minerAddress.isEmpty()) {</b>
+<b class="fc">&nbsp;                log.warn(&quot;No miner address for PoS validation&quot;);</b>
+<b class="fc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            boolean isValid = posConsensusService.validateStake(block, minerAddress);</b>
+<b class="fc">&nbsp;            log.debug(&quot;PoS validation result: {}&quot;, isValid);</b>
+<b class="fc">&nbsp;            return isValid;</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;PoS validation failed&quot;, e);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isValidatorEligible(String validatorAddress) {
+<b class="fc">&nbsp;        return posConsensusService.hasMinimumStake(validatorAddress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String selectNextValidator() {
+<b class="fc">&nbsp;        if (currentConsensusType == ConsensusType.PROOF_OF_STAKE ||</b>
+&nbsp;                currentConsensusType == ConsensusType.HYBRID) {
+<b class="fc">&nbsp;            return posConsensusService.selectValidator();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.warn(&quot;Cannot select validator for PoW consensus&quot;);</b>
+<b class="fc">&nbsp;        return null;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

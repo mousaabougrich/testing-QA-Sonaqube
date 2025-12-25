@@ -1,0 +1,456 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > WalletServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: WalletServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">WalletServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (124/124)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">WalletServiceImpl$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (18/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (124/124)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.BalanceDTO;
+&nbsp;import com.wallet.biochain.dto.WalletCreateRequestDTO;
+&nbsp;import com.wallet.biochain.dto.WalletCreateResponseDTO;
+&nbsp;import com.wallet.biochain.dto.WalletDTO;
+&nbsp;import com.wallet.biochain.entities.User;
+&nbsp;import com.wallet.biochain.entities.Wallet;
+&nbsp;import com.wallet.biochain.mappers.BalanceMapper;
+&nbsp;import com.wallet.biochain.mappers.WalletMapper;
+&nbsp;import com.wallet.biochain.repositories.TransactionRepository;
+&nbsp;import com.wallet.biochain.repositories.UserRepository;
+&nbsp;import com.wallet.biochain.repositories.WalletRepository;
+&nbsp;import com.wallet.biochain.services.CryptographyService;
+&nbsp;import com.wallet.biochain.services.WalletService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.security.KeyPair;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class WalletServiceImpl implements WalletService {
+&nbsp;
+&nbsp;    private final WalletRepository walletRepository;
+&nbsp;    private final UserRepository userRepository;
+&nbsp;    private final TransactionRepository transactionRepository;
+&nbsp;    private final CryptographyService cryptographyService;
+&nbsp;    private final WalletMapper walletMapper;
+&nbsp;    private final BalanceMapper balanceMapper;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public WalletCreateResponseDTO createWallet(WalletCreateRequestDTO request) {
+<b class="fc">&nbsp;        log.info(&quot;Creating wallet for user ID: {}&quot;, request.userId());</b>
+&nbsp;
+&nbsp;        // Validate user exists
+<b class="fc">&nbsp;        User user = userRepository.findById(request.userId())</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;User not found with ID: &quot; + request.userId()));</b>
+&nbsp;
+&nbsp;        // Generate key pair
+<b class="fc">&nbsp;        KeyPair keyPair = cryptographyService.generateKeyPair();</b>
+<b class="fc">&nbsp;        String publicKey = cryptographyService.encodePublicKey(keyPair.getPublic());</b>
+<b class="fc">&nbsp;        String privateKey = cryptographyService.encodePrivateKey(keyPair.getPrivate());</b>
+&nbsp;
+&nbsp;        // Generate wallet address from public key
+<b class="fc">&nbsp;        String address = cryptographyService.generateAddress(publicKey);</b>
+&nbsp;
+&nbsp;        // Check if address already exists (extremely unlikely but good practice)
+<b class="fc">&nbsp;        if (walletExists(address)) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Wallet address collision detected, regenerating...&quot;);</b>
+<b class="fc">&nbsp;            return createWallet(request); // Recursive call to regenerate</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Encrypt private key (in production, use user&#39;s password)
+<b class="fc">&nbsp;        String encryptedPrivateKey = cryptographyService.encryptPrivateKey(privateKey, &quot;default-password&quot;);</b>
+&nbsp;
+&nbsp;        // Create wallet entity
+<b class="fc">&nbsp;        Wallet wallet = new Wallet();</b>
+<b class="fc">&nbsp;        wallet.setAddress(address);</b>
+<b class="fc">&nbsp;        wallet.setPublicKey(publicKey);</b>
+<b class="fc">&nbsp;        wallet.setEncryptedPrivateKey(encryptedPrivateKey);</b>
+<b class="fc">&nbsp;        wallet.setBalance(BigDecimal.ZERO);</b>
+<b class="fc">&nbsp;        wallet.setUser(user);</b>
+<b class="fc">&nbsp;        wallet.setIsActive(true);</b>
+&nbsp;
+<b class="fc">&nbsp;        Wallet savedWallet = walletRepository.save(wallet);</b>
+<b class="fc">&nbsp;        log.info(&quot;Wallet created successfully with address: {}&quot;, address);</b>
+&nbsp;
+<b class="fc">&nbsp;        return walletMapper.toCreateResponseDTO(savedWallet, privateKey);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;WalletDTO&gt; getWalletById(Long id) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching wallet by ID: {}&quot;, id);</b>
+<b class="fc">&nbsp;        return walletRepository.findById(id)</b>
+<b class="fc">&nbsp;                .map(walletMapper::toDTO);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;WalletDTO&gt; getWalletByAddress(String address) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching wallet by address: {}&quot;, address);</b>
+<b class="fc">&nbsp;        return walletRepository.findByAddress(address)</b>
+<b class="fc">&nbsp;                .map(walletMapper::toDTO);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;WalletDTO&gt; getWalletsByUserId(Long userId) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching wallets for user ID: {}&quot;, userId);</b>
+<b class="fc">&nbsp;        return walletMapper.toDTOList(walletRepository.findByUserId(userId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;WalletDTO&gt; getActiveWalletsByUserId(Long userId) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching active wallets for user ID: {}&quot;, userId);</b>
+<b class="fc">&nbsp;        return walletMapper.toDTOList(walletRepository.findActiveWalletsByUserId(userId));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public BalanceDTO getBalance(String walletAddress) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching balance for wallet: {}&quot;, walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+&nbsp;        // Calculate pending balance from unconfirmed transactions
+<b class="fc">&nbsp;        BigDecimal pendingBalance = calculatePendingBalance(walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        return balanceMapper.toDTO(wallet, pendingBalance);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void updateBalance(String walletAddress, BigDecimal newBalance) {
+<b class="fc">&nbsp;        log.info(&quot;Updating balance for wallet: {} to {}&quot;, walletAddress, newBalance);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (newBalance.compareTo(BigDecimal.ZERO) &lt; 0) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Balance cannot be negative&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+<b class="fc">&nbsp;        wallet.setBalance(newBalance);</b>
+<b class="fc">&nbsp;        walletRepository.save(wallet);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Balance updated successfully for wallet: {}&quot;, walletAddress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void addToBalance(String walletAddress, BigDecimal amount) {
+<b class="fc">&nbsp;        log.info(&quot;Adding {} to wallet: {}&quot;, amount, walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (amount.compareTo(BigDecimal.ZERO) &lt;= 0) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Amount must be positive&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+<b class="fc">&nbsp;        BigDecimal newBalance = wallet.getBalance().add(amount);</b>
+<b class="fc">&nbsp;        wallet.setBalance(newBalance);</b>
+<b class="fc">&nbsp;        walletRepository.save(wallet);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Added {} to wallet: {}. New balance: {}&quot;, amount, walletAddress, newBalance);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void subtractFromBalance(String walletAddress, BigDecimal amount) {
+<b class="fc">&nbsp;        log.info(&quot;Subtracting {} from wallet: {}&quot;, amount, walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (amount.compareTo(BigDecimal.ZERO) &lt;= 0) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Amount must be positive&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+<b class="fc">&nbsp;        BigDecimal newBalance = wallet.getBalance().subtract(amount);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (newBalance.compareTo(BigDecimal.ZERO) &lt; 0) {</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Insufficient balance&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        wallet.setBalance(newBalance);</b>
+<b class="fc">&nbsp;        walletRepository.save(wallet);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Subtracted {} from wallet: {}. New balance: {}&quot;, amount, walletAddress, newBalance);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void deactivateWallet(String walletAddress) {
+<b class="fc">&nbsp;        log.info(&quot;Deactivating wallet: {}&quot;, walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+<b class="fc">&nbsp;        wallet.setIsActive(false);</b>
+<b class="fc">&nbsp;        walletRepository.save(wallet);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Wallet deactivated successfully: {}&quot;, walletAddress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void activateWallet(String walletAddress) {
+<b class="fc">&nbsp;        log.info(&quot;Activating wallet: {}&quot;, walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+<b class="fc">&nbsp;        wallet.setIsActive(true);</b>
+<b class="fc">&nbsp;        walletRepository.save(wallet);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Wallet activated successfully: {}&quot;, walletAddress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public BigDecimal getTotalBalance() {
+<b class="fc">&nbsp;        log.debug(&quot;Calculating total balance across all active wallets&quot;);</b>
+<b class="fc">&nbsp;        BigDecimal total = walletRepository.getTotalBalance();</b>
+<b class="fc">&nbsp;        return total != null ? total : BigDecimal.ZERO;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public String exportWallet(String walletAddress, String userPassword) {
+<b class="fc">&nbsp;        log.info(&quot;Exporting wallet: {}&quot;, walletAddress);</b>
+&nbsp;
+<b class="fc">&nbsp;        Wallet wallet = walletRepository.findByAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Wallet not found: &quot; + walletAddress));</b>
+&nbsp;
+&nbsp;        // Decrypt private key
+<b class="fc">&nbsp;        String privateKey = cryptographyService.decryptPrivateKey(</b>
+<b class="fc">&nbsp;                wallet.getEncryptedPrivateKey(),</b>
+&nbsp;                &quot;default-password&quot; // In production, verify user&#39;s password first
+&nbsp;        );
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Wallet exported successfully: {}&quot;, walletAddress);</b>
+<b class="fc">&nbsp;        return privateKey;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public WalletDTO importWallet(Long userId, String privateKey, String userPassword) {
+<b class="fc">&nbsp;        log.info(&quot;Importing wallet for user ID: {}&quot;, userId);</b>
+&nbsp;
+&nbsp;        // Validate user exists
+<b class="fc">&nbsp;        User user = userRepository.findById(userId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;User not found with ID: &quot; + userId));</b>
+&nbsp;
+&nbsp;        try {
+&nbsp;            // Decode private key and derive public key
+<b class="fc">&nbsp;            var privateKeyObj = cryptographyService.decodePrivateKey(privateKey);</b>
+&nbsp;
+&nbsp;            // Generate public key from private key
+<b class="fc">&nbsp;            KeyPair keyPair = cryptographyService.generateKeyPair(); // This is a workaround</b>
+<b class="fc">&nbsp;            String publicKey = cryptographyService.encodePublicKey(keyPair.getPublic());</b>
+&nbsp;
+&nbsp;            // Generate address
+<b class="fc">&nbsp;            String address = cryptographyService.generateAddress(publicKey);</b>
+&nbsp;
+&nbsp;            // Check if wallet already exists
+<b class="fc">&nbsp;            if (walletExists(address)) {</b>
+<b class="fc">&nbsp;                throw new IllegalStateException(&quot;Wallet already exists with this private key&quot;);</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // Encrypt private key
+<b class="fc">&nbsp;            String encryptedPrivateKey = cryptographyService.encryptPrivateKey(privateKey, &quot;default-password&quot;);</b>
+&nbsp;
+&nbsp;            // Create wallet
+<b class="fc">&nbsp;            Wallet wallet = new Wallet();</b>
+<b class="fc">&nbsp;            wallet.setAddress(address);</b>
+<b class="fc">&nbsp;            wallet.setPublicKey(publicKey);</b>
+<b class="fc">&nbsp;            wallet.setEncryptedPrivateKey(encryptedPrivateKey);</b>
+<b class="fc">&nbsp;            wallet.setBalance(BigDecimal.ZERO);</b>
+<b class="fc">&nbsp;            wallet.setUser(user);</b>
+<b class="fc">&nbsp;            wallet.setIsActive(true);</b>
+&nbsp;
+<b class="fc">&nbsp;            Wallet savedWallet = walletRepository.save(wallet);</b>
+<b class="fc">&nbsp;            log.info(&quot;Wallet imported successfully: {}&quot;, address);</b>
+&nbsp;
+<b class="fc">&nbsp;            return walletMapper.toDTO(savedWallet);</b>
+&nbsp;        } catch (IllegalStateException e) {
+&nbsp;            // Propagate existence check exception as-is to satisfy test expectations
+&nbsp;            throw e;
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;Failed to import wallet&quot;, e);</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Invalid private key format&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean isValidAddress(String address) {
+<b class="fc">&nbsp;        if (address == null || address.isEmpty()) {</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;        // Address format: 0x followed by 40 hexadecimal characters
+<b class="fc">&nbsp;        return address.matches(&quot;^0x[a-fA-F0-9]{40}$&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean walletExists(String address) {
+<b class="fc">&nbsp;        return walletRepository.existsByAddress(address);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculate pending balance from unconfirmed transactions
+&nbsp;     */
+&nbsp;    private BigDecimal calculatePendingBalance(String walletAddress) {
+<b class="fc">&nbsp;        var pendingReceived = transactionRepository.findByRecipientAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .stream()</b>
+<b class="fc">&nbsp;                .filter(tx -&gt; tx.getStatus().toString().equals(&quot;PENDING&quot;))</b>
+<b class="fc">&nbsp;                .map(tx -&gt; tx.getAmount())</b>
+<b class="fc">&nbsp;                .reduce(BigDecimal.ZERO, BigDecimal::add);</b>
+&nbsp;
+<b class="fc">&nbsp;        var pendingSent = transactionRepository.findBySenderAddress(walletAddress)</b>
+<b class="fc">&nbsp;                .stream()</b>
+<b class="fc">&nbsp;                .filter(tx -&gt; tx.getStatus().toString().equals(&quot;PENDING&quot;))</b>
+<b class="fc">&nbsp;                .map(tx -&gt; tx.getAmount().add(tx.getFee()))</b>
+<b class="fc">&nbsp;                .reduce(BigDecimal.ZERO, BigDecimal::add);</b>
+&nbsp;
+<b class="fc">&nbsp;        return pendingReceived.subtract(pendingSent);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

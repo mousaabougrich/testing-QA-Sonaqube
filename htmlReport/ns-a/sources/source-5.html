@@ -1,0 +1,170 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > WalletService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: WalletService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">WalletService$MockitoMock$tAPl9Olq</td>
+  </tr>
+  <tr>
+    <td class="name">WalletService$MockitoMock$tAPl9Olq$auxiliary$kLeQbrep</td>
+  </tr>
+  <tr>
+    <td class="name">WalletService$MockitoMock$tAPl9Olq$auxiliary$qAkOqGT2</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.WalletDTO;
+&nbsp;import com.wallet.biochain.dto.WalletCreateRequestDTO;
+&nbsp;import com.wallet.biochain.dto.WalletCreateResponseDTO;
+&nbsp;import com.wallet.biochain.dto.BalanceDTO;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface WalletService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a new wallet for a user
+&nbsp;     */
+&nbsp;    WalletCreateResponseDTO createWallet(WalletCreateRequestDTO request);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get wallet by ID
+&nbsp;     */
+&nbsp;    Optional&lt;WalletDTO&gt; getWalletById(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get wallet by address
+&nbsp;     */
+&nbsp;    Optional&lt;WalletDTO&gt; getWalletByAddress(String address);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all wallets for a user
+&nbsp;     */
+&nbsp;    List&lt;WalletDTO&gt; getWalletsByUserId(Long userId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get active wallets for a user
+&nbsp;     */
+&nbsp;    List&lt;WalletDTO&gt; getActiveWalletsByUserId(Long userId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get wallet balance
+&nbsp;     */
+&nbsp;    BalanceDTO getBalance(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update wallet balance
+&nbsp;     */
+&nbsp;    void updateBalance(String walletAddress, BigDecimal newBalance);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Add amount to wallet balance
+&nbsp;     */
+&nbsp;    void addToBalance(String walletAddress, BigDecimal amount);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Subtract amount from wallet balance
+&nbsp;     */
+&nbsp;    void subtractFromBalance(String walletAddress, BigDecimal amount);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Deactivate wallet
+&nbsp;     */
+&nbsp;    void deactivateWallet(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Activate wallet
+&nbsp;     */
+&nbsp;    void activateWallet(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get total balance across all active wallets
+&nbsp;     */
+&nbsp;    BigDecimal getTotalBalance();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Export wallet (backup private key)
+&nbsp;     */
+&nbsp;    String exportWallet(String walletAddress, String userPassword);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Import wallet (restore from private key)
+&nbsp;     */
+&nbsp;    WalletDTO importWallet(Long userId, String privateKey, String userPassword);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate wallet address format
+&nbsp;     */
+&nbsp;    boolean isValidAddress(String address);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check if wallet exists
+&nbsp;     */
+&nbsp;    boolean walletExists(String address);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

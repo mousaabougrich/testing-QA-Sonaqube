@@ -1,0 +1,175 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NodeService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: NodeService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">NodeService$MockitoMock$yXvhyNEv</td>
+  </tr>
+  <tr>
+    <td class="name">NodeService$MockitoMock$yXvhyNEv$auxiliary$hu2eewWZ</td>
+  </tr>
+  <tr>
+    <td class="name">NodeService$MockitoMock$yXvhyNEv$auxiliary$io5W0TvG</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.NodeInfoDTO;
+&nbsp;import com.wallet.biochain.dto.NodeConnectionRequestDTO;
+&nbsp;import com.wallet.biochain.dto.PeerListDTO;
+&nbsp;import com.wallet.biochain.entities.Node;
+&nbsp;import com.wallet.biochain.enums.NodeStatus;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface NodeService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Register a new node
+&nbsp;     */
+&nbsp;    NodeInfoDTO registerNode(NodeConnectionRequestDTO request);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get node by ID
+&nbsp;     */
+&nbsp;    Optional&lt;NodeInfoDTO&gt; getNodeById(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get node by node ID
+&nbsp;     */
+&nbsp;    Optional&lt;NodeInfoDTO&gt; getNodeByNodeId(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all nodes
+&nbsp;     */
+&nbsp;    List&lt;NodeInfoDTO&gt; getAllNodes();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get active nodes
+&nbsp;     */
+&nbsp;    List&lt;NodeInfoDTO&gt; getActiveNodes();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get nodes by status
+&nbsp;     */
+&nbsp;    List&lt;NodeInfoDTO&gt; getNodesByStatus(NodeStatus status);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update node status
+&nbsp;     */
+&nbsp;    void updateNodeStatus(String nodeId, NodeStatus status);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update node block height
+&nbsp;     */
+&nbsp;    void updateBlockHeight(String nodeId, Integer blockHeight);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Connect to peer
+&nbsp;     */
+&nbsp;    void connectToPeer(String nodeId, String peerNodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Disconnect from peer
+&nbsp;     */
+&nbsp;    void disconnectFromPeer(String nodeId, String peerNodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get peer list for node
+&nbsp;     */
+&nbsp;    PeerListDTO getPeerList(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Ping node
+&nbsp;     */
+&nbsp;    boolean pingNode(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get node latency
+&nbsp;     */
+&nbsp;    Long getNodeLatency(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Mark node as trusted
+&nbsp;     */
+&nbsp;    void trustNode(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Mark node as untrusted
+&nbsp;     */
+&nbsp;    void untrustNode(String nodeId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove stale nodes
+&nbsp;     */
+&nbsp;    void removeStaleNodes();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Synchronize with peer
+&nbsp;     */
+&nbsp;    void synchronizeWithPeer(String nodeId, String peerNodeId);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

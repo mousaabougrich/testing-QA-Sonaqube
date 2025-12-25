@@ -1,0 +1,331 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > P2PNetworkServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: P2PNetworkServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">P2PNetworkServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (15/15)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    95%
+  </span>
+  <span class="absValue">
+    (19/20)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    93%
+  </span>
+  <span class="absValue">
+    (66/71)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.config.NetworkConfig;
+&nbsp;import com.wallet.biochain.dto.NetworkStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Node;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.enums.NodeStatus;
+&nbsp;import com.wallet.biochain.mappers.NetworkMapper;
+&nbsp;import com.wallet.biochain.repositories.NodeRepository;
+&nbsp;import com.wallet.biochain.services.P2PNetworkService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.messaging.simp.SimpMessagingTemplate;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class P2PNetworkServiceImpl implements P2PNetworkService {
+&nbsp;
+&nbsp;    private final NodeRepository nodeRepository;
+&nbsp;    private final NetworkMapper networkMapper;
+&nbsp;    private final NetworkConfig networkConfig;
+&nbsp;    private final SimpMessagingTemplate messagingTemplate;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void broadcastBlock(Block block) {
+<b class="fc">&nbsp;        log.info(&quot;Broadcasting block {} to network&quot;, block.getBlockIndex());</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        int successCount = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;        for (Node node : activeNodes) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                sendBlockToNode(node, block);</b>
+<b class="fc">&nbsp;                successCount++;</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Failed to send block to node: {}&quot;, node.getNodeId(), e);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Block broadcasted to {}/{} nodes&quot;, successCount, activeNodes.size());</b>
+&nbsp;
+&nbsp;        // Broadcast via WebSocket
+<b class="fc">&nbsp;        messagingTemplate.convertAndSend(&quot;/topic/blocks&quot;, block);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void broadcastTransaction(Transaction transaction) {
+<b class="fc">&nbsp;        log.info(&quot;Broadcasting transaction {} to network&quot;, transaction.getTransactionHash());</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        int successCount = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;        for (Node node : activeNodes) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                sendTransactionToNode(node, transaction);</b>
+<b class="fc">&nbsp;                successCount++;</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Failed to send transaction to node: {}&quot;, node.getNodeId(), e);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Transaction broadcasted to {}/{} nodes&quot;, successCount, activeNodes.size());</b>
+&nbsp;
+&nbsp;        // Broadcast via WebSocket
+<b class="fc">&nbsp;        messagingTemplate.convertAndSend(&quot;/topic/transactions&quot;, transaction);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;String&gt; discoverPeers() {
+<b class="fc">&nbsp;        log.info(&quot;Discovering peers...&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;String&gt; discoveredPeers = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;        // Check seed nodes from config
+<b class="fc">&nbsp;        for (String seedNode : networkConfig.getP2p().getSeedNodes()) {</b>
+&nbsp;            try {
+&nbsp;                // In production, actually connect to seed node
+<b class="fc">&nbsp;                discoveredPeers.add(seedNode);</b>
+<b class="fc">&nbsp;                log.debug(&quot;Discovered seed node: {}&quot;, seedNode);</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Failed to connect to seed node: {}&quot;, seedNode, e);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Query existing nodes for their peers
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        for (Node node : activeNodes) {</b>
+<b class="fc">&nbsp;            for (Node peer : node.getPeers()) {</b>
+<b class="fc">&nbsp;                String peerAddress = peer.getIpAddress() + &quot;:&quot; + peer.getPort();</b>
+<b class="pc">&nbsp;                if (!discoveredPeers.contains(peerAddress)) {</b>
+<b class="fc">&nbsp;                    discoveredPeers.add(peerAddress);</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Discovered {} peers&quot;, discoveredPeers.size());</b>
+<b class="fc">&nbsp;        return discoveredPeers;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void connectToNetwork() {
+<b class="fc">&nbsp;        log.info(&quot;Connecting to P2P network...&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!networkConfig.getNode().getEnabled()) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;P2P network is disabled in configuration&quot;);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Discover and connect to peers
+<b class="fc">&nbsp;        List&lt;String&gt; peers = discoverPeers();</b>
+&nbsp;
+<b class="fc">&nbsp;        int targetPeers = Math.min(peers.size(), networkConfig.getP2p().getMaxPeers());</b>
+<b class="fc">&nbsp;        log.info(&quot;Attempting to connect to {} peers&quot;, targetPeers);</b>
+&nbsp;
+&nbsp;        // In production, actually establish connections
+<b class="fc">&nbsp;        log.info(&quot;Connected to P2P network&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void disconnectFromNetwork() {
+<b class="fc">&nbsp;        log.info(&quot;Disconnecting from P2P network...&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        for (Node node : activeNodes) {</b>
+&nbsp;            try {
+&nbsp;                // In production, properly close connections
+<b class="fc">&nbsp;                node.setStatus(NodeStatus.DISCONNECTED);</b>
+<b class="fc">&nbsp;                nodeRepository.save(node);</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Error disconnecting node: {}&quot;, node.getNodeId(), e);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Disconnected from P2P network&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public NetworkStatusDTO getNetworkStatus() {
+<b class="fc">&nbsp;        List&lt;Node&gt; allNodes = nodeRepository.findAll();</b>
+<b class="fc">&nbsp;        return networkMapper.toStatusDTO(allNodes);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void sendMessageToPeer(String nodeId, String message) {
+<b class="fc">&nbsp;        log.debug(&quot;Sending message to node: {}&quot;, nodeId);</b>
+&nbsp;
+<b class="fc">&nbsp;        Node node = nodeRepository.findByNodeId(nodeId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Node not found: &quot; + nodeId));</b>
+&nbsp;
+&nbsp;        // In production, send actual network message
+<b class="fc">&nbsp;        log.debug(&quot;Message sent to {}: {}&quot;, nodeId, message);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void broadcastMessage(String message) {
+<b class="fc">&nbsp;        log.info(&quot;Broadcasting message to all peers&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        for (Node node : activeNodes) {</b>
+&nbsp;            try {
+<b class="fc">&nbsp;                sendMessageToPeer(node.getNodeId(), message);</b>
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Failed to send message to node: {}&quot;, node.getNodeId(), e);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Broadcast via WebSocket
+<b class="fc">&nbsp;        messagingTemplate.convertAndSend(&quot;/topic/messages&quot;, message);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void requestBlockchainFromPeer(String nodeId) {
+<b class="fc">&nbsp;        log.info(&quot;Requesting blockchain from peer: {}&quot;, nodeId);</b>
+<b class="fc">&nbsp;        sendMessageToPeer(nodeId, &quot;REQUEST_BLOCKCHAIN&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void synchronizeWithNetwork() {
+<b class="fc">&nbsp;        log.info(&quot;Synchronizing with P2P network&quot;);</b>
+&nbsp;        // Delegate to BlockchainSyncService
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean isNetworkHealthy() {
+<b class="fc">&nbsp;        long activeCount = nodeRepository.countByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        int minPeers = networkConfig.getP2p().getMinPeers();</b>
+&nbsp;
+<b class="fc">&nbsp;        boolean healthy = activeCount &gt;= minPeers;</b>
+<b class="fc">&nbsp;        log.debug(&quot;Network health: {} active nodes (min: {})&quot;, activeCount, minPeers);</b>
+&nbsp;
+<b class="fc">&nbsp;        return healthy;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public Integer getConnectedPeersCount() {
+<b class="fc">&nbsp;        return Math.toIntExact(nodeRepository.countByStatus(NodeStatus.ACTIVE));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void sendBlockToNode(Node node, Block block) {
+&nbsp;        // In production, send via actual network protocol
+<b class="fc">&nbsp;        log.debug(&quot;Sending block {} to node {}&quot;, block.getBlockIndex(), node.getNodeId());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private void sendTransactionToNode(Node node, Transaction transaction) {
+&nbsp;        // In production, send via actual network protocol
+<b class="fc">&nbsp;        log.debug(&quot;Sending transaction {} to node {}&quot;,</b>
+<b class="fc">&nbsp;                transaction.getTransactionHash(), node.getNodeId());</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

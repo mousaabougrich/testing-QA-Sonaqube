@@ -1,0 +1,136 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ValidationService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: ValidationService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">ValidationService$MockitoMock$bNxAHqXg</td>
+  </tr>
+  <tr>
+    <td class="name">ValidationService$MockitoMock$bNxAHqXg$auxiliary$3g7RiO2l</td>
+  </tr>
+  <tr>
+    <td class="name">ValidationService$MockitoMock$bNxAHqXg$auxiliary$9W2Jy2LY</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;public interface ValidationService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate transaction
+&nbsp;     */
+&nbsp;    boolean validateTransaction(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block
+&nbsp;     */
+&nbsp;    boolean validateBlock(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate blockchain
+&nbsp;     */
+&nbsp;    boolean validateBlockchain(List&lt;Block&gt; blocks);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate transaction signature
+&nbsp;     */
+&nbsp;    boolean validateSignature(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate wallet balance for transaction
+&nbsp;     */
+&nbsp;    boolean validateBalance(String walletAddress, java.math.BigDecimal amount);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block hash
+&nbsp;     */
+&nbsp;    boolean validateBlockHash(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate previous hash link
+&nbsp;     */
+&nbsp;    boolean validatePreviousHash(Block currentBlock, Block previousBlock);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate transaction format
+&nbsp;     */
+&nbsp;    boolean validateTransactionFormat(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate wallet address format
+&nbsp;     */
+&nbsp;    boolean validateAddressFormat(String address);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check for double spending
+&nbsp;     */
+&nbsp;    boolean checkDoubleSpending(Transaction transaction);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

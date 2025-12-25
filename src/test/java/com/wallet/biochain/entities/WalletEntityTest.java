@@ -85,6 +85,7 @@ class WalletEntityTest {
         wallet.setAddress("0x1234567890abcdef");
         wallet.setPublicKey("publickey123");
         wallet.setBalance(new BigDecimal("100.50"));
+        wallet.setIsActive(true); // Initialize isActive
 
         assertNotNull(wallet.getAddress());
         assertNotNull(wallet.getPublicKey());

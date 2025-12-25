@@ -1,0 +1,273 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionPoolController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionPoolController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TransactionPoolController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    8,3%
+  </span>
+  <span class="absValue">
+    (1/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2,1%
+  </span>
+  <span class="absValue">
+    (1/47)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.TransactionPoolStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.entities.TransactionPool;
+&nbsp;import com.wallet.biochain.services.TransactionPoolService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/transaction-pool&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@Tag(name = &quot;Transaction Pool&quot;, description = &quot;Transaction pool management endpoints&quot;)
+&nbsp;public class TransactionPoolController {
+&nbsp;
+&nbsp;    private final TransactionPoolService poolService;
+&nbsp;
+&nbsp;    @PostMapping
+&nbsp;    @Operation(summary = &quot;Create pool&quot;, description = &quot;Creates a new transaction pool&quot;)
+&nbsp;    public ResponseEntity&lt;TransactionPool&gt; createPool(
+&nbsp;            @RequestParam String poolName,
+&nbsp;            @RequestParam Integer maxSize) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to create transaction pool: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            TransactionPool pool = poolService.createPool(poolName, maxSize);</b>
+<b class="nc">&nbsp;            return ResponseEntity.status(HttpStatus.CREATED).body(pool);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to create pool&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{id}&quot;)
+&nbsp;    @Operation(summary = &quot;Get pool by ID&quot;, description = &quot;Retrieves pool by ID&quot;)
+&nbsp;    public ResponseEntity&lt;TransactionPool&gt; getPoolById(@PathVariable Long id) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get pool: {}&quot;, id);</b>
+&nbsp;
+<b class="nc">&nbsp;        return poolService.getPoolById(id)</b>
+<b class="nc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/name/{poolName}&quot;)
+&nbsp;    @Operation(summary = &quot;Get pool by name&quot;, description = &quot;Retrieves pool by name&quot;)
+&nbsp;    public ResponseEntity&lt;TransactionPool&gt; getPoolByName(@PathVariable String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get pool by name: {}&quot;, poolName);</b>
+&nbsp;
+<b class="nc">&nbsp;        return poolService.getPoolByName(poolName)</b>
+<b class="nc">&nbsp;                .map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{poolName}/status&quot;)
+&nbsp;    @Operation(summary = &quot;Get pool status&quot;, description = &quot;Gets transaction pool status and statistics&quot;)
+&nbsp;    public ResponseEntity&lt;TransactionPoolStatusDTO&gt; getPoolStatus(@PathVariable String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get pool status: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            TransactionPoolStatusDTO status = poolService.getPoolStatus(poolName);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(status);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{poolName}/transactions&quot;)
+&nbsp;    @Operation(summary = &quot;Add transaction to pool&quot;, description = &quot;Adds a transaction to the pool&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; addTransaction(
+&nbsp;            @PathVariable String poolName,
+&nbsp;            @RequestBody Transaction transaction) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to add transaction to pool: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            poolService.addTransaction(poolName, transaction);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException | IllegalStateException e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to add transaction to pool&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/{poolName}/transactions/{transactionHash}&quot;)
+&nbsp;    @Operation(summary = &quot;Remove transaction&quot;, description = &quot;Removes a transaction from pool&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; removeTransaction(
+&nbsp;            @PathVariable String poolName,
+&nbsp;            @PathVariable String transactionHash) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to remove transaction {} from pool: {}&quot;, transactionHash, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            poolService.removeTransaction(poolName, transactionHash);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to remove transaction&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{poolName}/transactions&quot;)
+&nbsp;    @Operation(summary = &quot;Get pending transactions&quot;, description = &quot;Gets all pending transactions in pool&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Transaction&gt;&gt; getPendingTransactions(@PathVariable String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get pending transactions from pool: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Transaction&gt; transactions = poolService.getPendingTransactions(poolName);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(transactions);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{poolName}/top-by-fee&quot;)
+&nbsp;    @Operation(summary = &quot;Get top transactions by fee&quot;, description = &quot;Gets top transactions sorted by fee&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Transaction&gt;&gt; getTopTransactionsByFee(
+&nbsp;            @PathVariable String poolName,
+&nbsp;            @RequestParam(defaultValue = &quot;10&quot;) Integer limit) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get top {} transactions by fee from pool: {}&quot;, limit, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Transaction&gt; transactions = poolService.getTopTransactionsByFee(poolName, limit);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(transactions);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @DeleteMapping(&quot;/{poolName}/clear&quot;)
+&nbsp;    @Operation(summary = &quot;Clear pool&quot;, description = &quot;Removes all transactions from pool&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; clearPool(@PathVariable String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to clear pool: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            poolService.clearPool(poolName);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{poolName}/is-full&quot;)
+&nbsp;    @Operation(summary = &quot;Check if pool is full&quot;, description = &quot;Checks if pool has reached max capacity&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; isPoolFull(@PathVariable String poolName) {
+<b class="nc">&nbsp;        log.debug(&quot;REST request to check if pool is full: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            boolean isFull = poolService.isPoolFull(poolName);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(isFull);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/available&quot;)
+&nbsp;    @Operation(summary = &quot;Get available pools&quot;, description = &quot;Gets all available (not full) pools&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;TransactionPool&gt;&gt; getAvailablePools() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get available pools&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;TransactionPool&gt; pools = poolService.getAvailablePools();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(pools);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

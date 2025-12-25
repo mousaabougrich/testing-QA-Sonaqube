@@ -1,0 +1,414 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TransactionServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (9/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    61,1%
+  </span>
+  <span class="absValue">
+    (11/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    74,5%
+  </span>
+  <span class="absValue">
+    (76/102)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TransactionServiceImpl$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (9/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    61,1%
+  </span>
+  <span class="absValue">
+    (11/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    74,5%
+  </span>
+  <span class="absValue">
+    (76/102)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.TransactionHistoryDTO;
+&nbsp;import com.wallet.biochain.dto.TransactionRequestDTO;
+&nbsp;import com.wallet.biochain.dto.TransactionResponseDTO;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.entities.Wallet;
+&nbsp;import com.wallet.biochain.enums.TransactionStatus;
+&nbsp;import com.wallet.biochain.mappers.TransactionMapper;
+&nbsp;import com.wallet.biochain.repositories.BlockRepository;
+&nbsp;import com.wallet.biochain.repositories.TransactionRepository;
+&nbsp;import com.wallet.biochain.repositories.WalletRepository;
+&nbsp;import com.wallet.biochain.services.CryptographyService;
+&nbsp;import com.wallet.biochain.services.P2PNetworkService;
+&nbsp;import com.wallet.biochain.services.TransactionService;
+&nbsp;import com.wallet.biochain.services.ValidationService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.math.RoundingMode;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class TransactionServiceImpl implements TransactionService {
+&nbsp;
+&nbsp;    private final TransactionRepository transactionRepository;
+&nbsp;    private final WalletRepository walletRepository;
+&nbsp;    private final BlockRepository blockRepository;
+&nbsp;    private final CryptographyService cryptographyService;
+&nbsp;    private final ValidationService validationService;
+&nbsp;    private final P2PNetworkService p2pNetworkService;
+&nbsp;    private final TransactionMapper transactionMapper;
+&nbsp;
+<b class="fc">&nbsp;    private static final BigDecimal FEE_PERCENTAGE = new BigDecimal(&quot;0.001&quot;); // 0.1% fee</b>
+<b class="fc">&nbsp;    private static final BigDecimal MIN_FEE = new BigDecimal(&quot;0.00001&quot;);</b>
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public TransactionResponseDTO createTransaction(TransactionRequestDTO request) {
+<b class="fc">&nbsp;        log.info(&quot;Creating transaction from {} to {}&quot;, request.senderAddress(), request.recipientAddress());</b>
+&nbsp;
+&nbsp;        // Validate wallets exist
+<b class="fc">&nbsp;        Wallet senderWallet = walletRepository.findByAddress(request.senderAddress())</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Sender wallet not found&quot;));</b>
+&nbsp;
+<b class="fc">&nbsp;        Wallet recipientWallet = walletRepository.findByAddress(request.recipientAddress())</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Recipient wallet not found&quot;));</b>
+&nbsp;
+&nbsp;        // Calculate fee if not provided
+<b class="pc">&nbsp;        BigDecimal fee = request.fee() != null ? request.fee() : calculateTransactionFee(request.amount());</b>
+&nbsp;
+&nbsp;        // Validate sufficient balance
+<b class="fc">&nbsp;        BigDecimal totalRequired = request.amount().add(fee);</b>
+<b class="fc">&nbsp;        if (senderWallet.getBalance().compareTo(totalRequired) &lt; 0) {</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Insufficient balance. Required: &quot; + totalRequired + &quot;, Available: &quot; + senderWallet.getBalance());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Create transaction
+<b class="fc">&nbsp;        Transaction transaction = new Transaction();</b>
+<b class="fc">&nbsp;        transaction.setSenderAddress(request.senderAddress());</b>
+<b class="fc">&nbsp;        transaction.setRecipientAddress(request.recipientAddress());</b>
+<b class="fc">&nbsp;        transaction.setAmount(request.amount());</b>
+<b class="fc">&nbsp;        transaction.setFee(fee);</b>
+<b class="fc">&nbsp;        transaction.setTimestamp(System.currentTimeMillis());</b>
+<b class="fc">&nbsp;        transaction.setStatus(TransactionStatus.PENDING);</b>
+<b class="fc">&nbsp;        transaction.setMemo(request.memo());</b>
+<b class="fc">&nbsp;        transaction.setSenderWallet(senderWallet);</b>
+<b class="fc">&nbsp;        transaction.setRecipientWallet(recipientWallet);</b>
+&nbsp;
+&nbsp;        // Generate transaction hash
+<b class="fc">&nbsp;        String txData = buildTransactionData(transaction);</b>
+<b class="fc">&nbsp;        String txHash = cryptographyService.hash(txData);</b>
+<b class="fc">&nbsp;        transaction.setTransactionHash(txHash);</b>
+&nbsp;
+&nbsp;        // Sign transaction
+<b class="pc">&nbsp;        if (request.privateKey() != null &amp;&amp; !request.privateKey().isEmpty()) {</b>
+<b class="fc">&nbsp;            String signature = signTransaction(transaction, request.privateKey());</b>
+<b class="fc">&nbsp;            transaction.setSignature(signature);</b>
+&nbsp;        } else {
+&nbsp;            // In production, retrieve private key securely
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Private key is required for signing&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate transaction
+<b class="pc">&nbsp;        if (!validationService.validateTransaction(transaction)) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Transaction validation failed&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Save transaction
+<b class="fc">&nbsp;        Transaction savedTransaction = transactionRepository.save(transaction);</b>
+<b class="fc">&nbsp;        log.info(&quot;Transaction created successfully: {}&quot;, txHash);</b>
+&nbsp;
+&nbsp;        // Broadcast to network (asynchronous)
+&nbsp;        try {
+<b class="fc">&nbsp;            broadcastTransaction(savedTransaction);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast transaction, but transaction was saved&quot;, e);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return transactionMapper.toResponseDTO(savedTransaction);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;TransactionResponseDTO&gt; getTransactionByHash(String transactionHash) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching transaction by hash: {}&quot;, transactionHash);</b>
+<b class="fc">&nbsp;        return transactionRepository.findByTransactionHash(transactionHash)</b>
+<b class="fc">&nbsp;                .map(transactionMapper::toResponseDTO);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionHistoryDTO&gt; getTransactionHistory(String walletAddress) {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching transaction history for wallet: {}&quot;, walletAddress);</b>
+<b class="nc">&nbsp;        List&lt;Transaction&gt; transactions = transactionRepository.findByWalletAddressOrderByTimestampDesc(walletAddress);</b>
+<b class="nc">&nbsp;        return transactionMapper.toHistoryDTOList(transactions, walletAddress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionResponseDTO&gt; getSentTransactions(String walletAddress) {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching sent transactions for wallet: {}&quot;, walletAddress);</b>
+<b class="nc">&nbsp;        return transactionMapper.toResponseDTOList(</b>
+<b class="nc">&nbsp;                transactionRepository.findBySenderAddress(walletAddress)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionResponseDTO&gt; getReceivedTransactions(String walletAddress) {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching received transactions for wallet: {}&quot;, walletAddress);</b>
+<b class="nc">&nbsp;        return transactionMapper.toResponseDTOList(</b>
+<b class="nc">&nbsp;                transactionRepository.findByRecipientAddress(walletAddress)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionResponseDTO&gt; getPendingTransactions() {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching pending transactions&quot;);</b>
+<b class="nc">&nbsp;        return transactionMapper.toResponseDTOList(</b>
+<b class="nc">&nbsp;                transactionRepository.findByStatus(TransactionStatus.PENDING)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionResponseDTO&gt; getConfirmedTransactions() {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching confirmed transactions&quot;);</b>
+<b class="nc">&nbsp;        return transactionMapper.toResponseDTOList(</b>
+<b class="nc">&nbsp;                transactionRepository.findByStatus(TransactionStatus.CONFIRMED)</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean validateTransaction(Transaction transaction) {
+<b class="nc">&nbsp;        return validationService.validateTransaction(transaction);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public String signTransaction(Transaction transaction, String privateKey) {
+<b class="fc">&nbsp;        log.debug(&quot;Signing transaction: {}&quot;, transaction.getTransactionHash());</b>
+&nbsp;
+<b class="fc">&nbsp;        String dataToSign = buildTransactionData(transaction);</b>
+<b class="fc">&nbsp;        String signature = cryptographyService.sign(dataToSign, privateKey);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.debug(&quot;Transaction signed successfully&quot;);</b>
+<b class="fc">&nbsp;        return signature;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean verifyTransactionSignature(Transaction transaction) {
+<b class="nc">&nbsp;        return validationService.validateSignature(transaction);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public void broadcastTransaction(Transaction transaction) {
+<b class="fc">&nbsp;        log.info(&quot;Broadcasting transaction to network: {}&quot;, transaction.getTransactionHash());</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            p2pNetworkService.broadcastTransaction(transaction);</b>
+<b class="fc">&nbsp;            log.info(&quot;Transaction broadcasted successfully&quot;);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast transaction&quot;, e);</b>
+<b class="nc">&nbsp;            throw new RuntimeException(&quot;Failed to broadcast transaction&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void confirmTransaction(String transactionHash, Long blockId) {
+<b class="fc">&nbsp;        log.info(&quot;Confirming transaction: {}&quot;, transactionHash);</b>
+&nbsp;
+<b class="fc">&nbsp;        Transaction transaction = transactionRepository.findByTransactionHash(transactionHash)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Transaction not found: &quot; + transactionHash));</b>
+&nbsp;
+<b class="fc">&nbsp;        var block = blockRepository.findById(blockId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Block not found: &quot; + blockId));</b>
+&nbsp;
+&nbsp;        // Update transaction status
+<b class="fc">&nbsp;        transaction.setStatus(TransactionStatus.CONFIRMED);</b>
+<b class="fc">&nbsp;        transaction.setBlock(block);</b>
+<b class="fc">&nbsp;        transaction.setConfirmationCount(1);</b>
+&nbsp;
+<b class="fc">&nbsp;        transactionRepository.save(transaction);</b>
+&nbsp;
+&nbsp;        // Update wallet balances
+<b class="fc">&nbsp;        updateWalletBalances(transaction);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Transaction confirmed successfully: {}&quot;, transactionHash);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Long getTransactionCount(String walletAddress) {
+<b class="nc">&nbsp;        log.debug(&quot;Counting transactions for wallet: {}&quot;, walletAddress);</b>
+<b class="nc">&nbsp;        return transactionRepository.countTransactionsByAddress(walletAddress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public BigDecimal getTotalTransactionVolume() {
+<b class="nc">&nbsp;        log.debug(&quot;Calculating total transaction volume&quot;);</b>
+<b class="nc">&nbsp;        BigDecimal volume = transactionRepository.getTotalTransactionVolume();</b>
+<b class="nc">&nbsp;        return volume != null ? volume : BigDecimal.ZERO;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public BigDecimal calculateTransactionFee(BigDecimal amount) {
+<b class="fc">&nbsp;        BigDecimal calculatedFee = amount.multiply(FEE_PERCENTAGE).setScale(8, RoundingMode.HALF_UP);</b>
+&nbsp;
+&nbsp;        // Ensure minimum fee
+<b class="fc">&nbsp;        if (calculatedFee.compareTo(MIN_FEE) &lt; 0) {</b>
+<b class="fc">&nbsp;            return MIN_FEE;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return calculatedFee;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Build transaction data for hashing/signing
+&nbsp;     */
+&nbsp;    private String buildTransactionData(Transaction transaction) {
+<b class="fc">&nbsp;        return transaction.getSenderAddress() +</b>
+<b class="fc">&nbsp;                transaction.getRecipientAddress() +</b>
+<b class="fc">&nbsp;                transaction.getAmount().toPlainString() +</b>
+<b class="fc">&nbsp;                transaction.getFee().toPlainString() +</b>
+<b class="fc">&nbsp;                transaction.getTimestamp();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update wallet balances after transaction confirmation
+&nbsp;     */
+&nbsp;    private void updateWalletBalances(Transaction transaction) {
+&nbsp;        // Deduct from sender
+<b class="fc">&nbsp;        Wallet senderWallet = transaction.getSenderWallet();</b>
+<b class="pc">&nbsp;        if (senderWallet != null) {</b>
+<b class="fc">&nbsp;            BigDecimal totalDeduction = transaction.getAmount().add(transaction.getFee());</b>
+<b class="fc">&nbsp;            senderWallet.setBalance(senderWallet.getBalance().subtract(totalDeduction));</b>
+<b class="fc">&nbsp;            walletRepository.save(senderWallet);</b>
+<b class="fc">&nbsp;            log.debug(&quot;Deducted {} from sender wallet: {}&quot;, totalDeduction, senderWallet.getAddress());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Add to recipient
+<b class="fc">&nbsp;        Wallet recipientWallet = transaction.getRecipientWallet();</b>
+<b class="pc">&nbsp;        if (recipientWallet != null) {</b>
+<b class="fc">&nbsp;            recipientWallet.setBalance(recipientWallet.getBalance().add(transaction.getAmount()));</b>
+<b class="fc">&nbsp;            walletRepository.save(recipientWallet);</b>
+<b class="fc">&nbsp;            log.debug(&quot;Added {} to recipient wallet: {}&quot;, transaction.getAmount(), recipientWallet.getAddress());</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

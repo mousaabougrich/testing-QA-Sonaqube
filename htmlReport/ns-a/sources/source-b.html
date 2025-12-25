@@ -1,0 +1,154 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BlockchainService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: BlockchainService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">BlockchainService$MockitoMock$Zxn4m148</td>
+  </tr>
+  <tr>
+    <td class="name">BlockchainService$MockitoMock$Zxn4m148$auxiliary$0azJAcE5</td>
+  </tr>
+  <tr>
+    <td class="name">BlockchainService$MockitoMock$Zxn4m148$auxiliary$jCDBu0eB</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.BlockchainStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Blockchain;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.enums.ConsensusType;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface BlockchainService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Initialize blockchain with genesis block
+&nbsp;     */
+&nbsp;    Blockchain initializeBlockchain(String name, ConsensusType consensusType);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blockchain by ID
+&nbsp;     */
+&nbsp;    Optional&lt;Blockchain&gt; getBlockchainById(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blockchain by chain ID
+&nbsp;     */
+&nbsp;    Optional&lt;Blockchain&gt; getBlockchainByChainId(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blockchain status
+&nbsp;     */
+&nbsp;    BlockchainStatusDTO getBlockchainStatus(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all blockchains
+&nbsp;     */
+&nbsp;    List&lt;Blockchain&gt; getAllBlockchains();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Add block to blockchain
+&nbsp;     */
+&nbsp;    void addBlockToChain(String chainId, Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate entire blockchain
+&nbsp;     */
+&nbsp;    boolean validateBlockchain(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blockchain height
+&nbsp;     */
+&nbsp;    Integer getBlockchainHeight(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update blockchain difficulty
+&nbsp;     */
+&nbsp;    void updateDifficulty(String chainId, Integer newDifficulty);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get genesis block
+&nbsp;     */
+&nbsp;    Block getGenesisBlock(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check blockchain integrity
+&nbsp;     */
+&nbsp;    boolean checkIntegrity(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get total transactions in blockchain
+&nbsp;     */
+&nbsp;    Integer getTotalTransactions(String chainId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Synchronize blockchain
+&nbsp;     */
+&nbsp;    void synchronizeBlockchain(String chainId);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

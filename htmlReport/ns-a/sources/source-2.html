@@ -1,0 +1,110 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ConsensusService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: ConsensusService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">ConsensusService</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.enums.ConsensusType;
+&nbsp;
+&nbsp;public interface ConsensusService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block using configured consensus mechanism
+&nbsp;     */
+&nbsp;    boolean validateBlock(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Select consensus mechanism
+&nbsp;     */
+&nbsp;    void setConsensusType(ConsensusType consensusType);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get current consensus type
+&nbsp;     */
+&nbsp;    ConsensusType getCurrentConsensusType();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block with PoW
+&nbsp;     */
+&nbsp;    boolean validateWithPoW(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block with PoS
+&nbsp;     */
+&nbsp;    boolean validateWithPoS(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check if validator is eligible (PoS)
+&nbsp;     */
+&nbsp;    boolean isValidatorEligible(String validatorAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Select next validator (PoS)
+&nbsp;     */
+&nbsp;    String selectNextValidator();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

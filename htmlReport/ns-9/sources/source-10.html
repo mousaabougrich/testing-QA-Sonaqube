@@ -1,0 +1,453 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ValidationServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: ValidationServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ValidationServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (13/13)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    66,7%
+  </span>
+  <span class="absValue">
+    (64/96)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    74%
+  </span>
+  <span class="absValue">
+    (114/154)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.enums.TransactionStatus;
+&nbsp;import com.wallet.biochain.repositories.TransactionRepository;
+&nbsp;import com.wallet.biochain.repositories.WalletRepository;
+&nbsp;import com.wallet.biochain.services.CryptographyService;
+&nbsp;import com.wallet.biochain.services.ValidationService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.List;
+&nbsp;import java.util.regex.Pattern;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class ValidationServiceImpl implements ValidationService {
+&nbsp;
+&nbsp;    private final CryptographyService cryptographyService;
+&nbsp;    private final WalletRepository walletRepository;
+&nbsp;    private final TransactionRepository transactionRepository;
+&nbsp;
+<b class="fc">&nbsp;    private static final Pattern ADDRESS_PATTERN = Pattern.compile(&quot;^0x[a-fA-F0-9]{40}$&quot;);</b>
+<b class="fc">&nbsp;    private static final BigDecimal MIN_TRANSACTION_AMOUNT = new BigDecimal(&quot;0.00000001&quot;);</b>
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateTransaction(Transaction transaction) {
+<b class="fc">&nbsp;        if (transaction == null) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Transaction is null&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate format
+<b class="pc">&nbsp;        if (!validateTransactionFormat(transaction)) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Transaction format validation failed for tx: {}&quot;, transaction.getTransactionHash());</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate signature
+<b class="pc">&nbsp;        if (!validateSignature(transaction)) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Transaction signature validation failed for tx: {}&quot;, transaction.getTransactionHash());</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate balance
+<b class="pc">&nbsp;        if (!validateBalance(transaction.getSenderAddress(), transaction.getAmount().add(transaction.getFee()))) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Insufficient balance for transaction: {}&quot;, transaction.getTransactionHash());</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Check double spending
+<b class="pc">&nbsp;        if (checkDoubleSpending(transaction)) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Double spending detected for transaction: {}&quot;, transaction.getTransactionHash());</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Transaction validated successfully: {}&quot;, transaction.getTransactionHash());</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateBlock(Block block) {
+<b class="fc">&nbsp;        if (block == null) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Block is null&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate block hash
+<b class="pc">&nbsp;        if (!validateBlockHash(block)) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Block hash validation failed for block: {}&quot;, block.getBlockIndex());</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate all transactions in the block
+<b class="pc">&nbsp;        if (block.getTransactions() != null) {</b>
+<b class="pc">&nbsp;            for (Transaction tx : block.getTransactions()) {</b>
+<b class="nc">&nbsp;                if (!validateTransaction(tx)) {</b>
+<b class="nc">&nbsp;                    log.warn(&quot;Invalid transaction in block: {}&quot;, block.getBlockIndex());</b>
+<b class="nc">&nbsp;                    return false;</b>
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Block validated successfully: {}&quot;, block.getBlockIndex());</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateBlockchain(List&lt;Block&gt; blocks) {
+<b class="pc">&nbsp;        if (blocks == null || blocks.isEmpty()) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Blockchain is empty or null&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate genesis block
+<b class="fc">&nbsp;        Block genesisBlock = blocks.get(0);</b>
+<b class="pc">&nbsp;        if (genesisBlock.getBlockIndex() != 0) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Invalid genesis block index&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;        // Also validate the genesis block&#39;s intrinsic validity (hash/transactions)
+<b class="pc">&nbsp;        if (!validateBlock(genesisBlock)) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Genesis block validation failed&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate each block and its link to previous block
+<b class="fc">&nbsp;        for (int i = 1; i &lt; blocks.size(); i++) {</b>
+<b class="fc">&nbsp;            Block currentBlock = blocks.get(i);</b>
+<b class="fc">&nbsp;            Block previousBlock = blocks.get(i - 1);</b>
+&nbsp;
+&nbsp;            // Validate current block
+<b class="pc">&nbsp;            if (!validateBlock(currentBlock)) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;Invalid block at index: {}&quot;, i);</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;
+&nbsp;            // Validate link to previous block
+<b class="pc">&nbsp;            if (!validatePreviousHash(currentBlock, previousBlock)) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;Invalid previous hash link at block: {}&quot;, i);</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Blockchain validated successfully with {} blocks&quot;, blocks.size());</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateSignature(Transaction transaction) {
+<b class="pc">&nbsp;        if (transaction.getSignature() == null || transaction.getSignature().isEmpty()) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Transaction signature is missing&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+&nbsp;            // Get sender&#39;s public key from wallet
+<b class="fc">&nbsp;            var wallet = walletRepository.findByAddress(transaction.getSenderAddress());</b>
+<b class="fc">&nbsp;            if (wallet.isEmpty()) {</b>
+<b class="fc">&nbsp;                log.warn(&quot;Sender wallet not found: {}&quot;, transaction.getSenderAddress());</b>
+<b class="fc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            String publicKey = wallet.get().getPublicKey();</b>
+<b class="fc">&nbsp;            String dataToVerify = buildTransactionData(transaction);</b>
+&nbsp;
+<b class="fc">&nbsp;            boolean isValid = cryptographyService.verifySignature(dataToVerify, transaction.getSignature(), publicKey);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (!isValid) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;Signature verification failed for transaction: {}&quot;, transaction.getTransactionHash());</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            return isValid;</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Error validating signature for transaction: {}&quot;, transaction.getTransactionHash(), e);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateBalance(String walletAddress, BigDecimal amount) {
+<b class="pc">&nbsp;        if (amount.compareTo(BigDecimal.ZERO) &lt;= 0) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Invalid amount: {}&quot;, amount);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        var wallet = walletRepository.findByAddress(walletAddress);</b>
+<b class="fc">&nbsp;        if (wallet.isEmpty()) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Wallet not found: {}&quot;, walletAddress);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        BigDecimal currentBalance = wallet.get().getBalance();</b>
+<b class="fc">&nbsp;        boolean hasSufficientBalance = currentBalance.compareTo(amount) &gt;= 0;</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!hasSufficientBalance) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Insufficient balance. Required: {}, Available: {}&quot;, amount, currentBalance);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return hasSufficientBalance;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateBlockHash(Block block) {
+<b class="pc">&nbsp;        if (block.getHash() == null || block.getHash().isEmpty()) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Block hash is missing&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            String calculatedHash = calculateBlockHash(block);</b>
+<b class="fc">&nbsp;            boolean isValid = block.getHash().equals(calculatedHash);</b>
+&nbsp;
+<b class="pc">&nbsp;            if (!isValid) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;Block hash mismatch. Expected: {}, Got: {}&quot;, calculatedHash, block.getHash());</b>
+&nbsp;            }
+&nbsp;
+<b class="fc">&nbsp;            return isValid;</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Error validating block hash&quot;, e);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validatePreviousHash(Block currentBlock, Block previousBlock) {
+<b class="pc">&nbsp;        if (currentBlock == null || previousBlock == null) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Current or previous block is null&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (currentBlock.getBlockIndex() != previousBlock.getBlockIndex() + 1) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Block index sequence is invalid&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        boolean isValid = currentBlock.getPreviousHash().equals(previousBlock.getHash());</b>
+&nbsp;
+<b class="fc">&nbsp;        if (!isValid) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Previous hash mismatch at block: {}&quot;, currentBlock.getBlockIndex());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return isValid;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateTransactionFormat(Transaction transaction) {
+&nbsp;        // Validate sender address
+<b class="fc">&nbsp;        if (!validateAddressFormat(transaction.getSenderAddress())) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Invalid sender address format: {}&quot;, transaction.getSenderAddress());</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate recipient address
+<b class="pc">&nbsp;        if (!validateAddressFormat(transaction.getRecipientAddress())) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Invalid recipient address format: {}&quot;, transaction.getRecipientAddress());</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate amount
+<b class="pc">&nbsp;        if (transaction.getAmount() == null || transaction.getAmount().compareTo(MIN_TRANSACTION_AMOUNT) &lt; 0) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Invalid transaction amount: {}&quot;, transaction.getAmount());</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate fee
+<b class="pc">&nbsp;        if (transaction.getFee() == null || transaction.getFee().compareTo(BigDecimal.ZERO) &lt; 0) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Invalid transaction fee: {}&quot;, transaction.getFee());</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Cannot send to same address
+<b class="fc">&nbsp;        if (transaction.getSenderAddress().equals(transaction.getRecipientAddress())) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Sender and recipient addresses are the same&quot;);</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate timestamp
+<b class="pc">&nbsp;        if (transaction.getTimestamp() == null || transaction.getTimestamp() &lt;= 0) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Invalid transaction timestamp&quot;);</b>
+<b class="nc">&nbsp;            return false;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean validateAddressFormat(String address) {
+<b class="pc">&nbsp;        if (address == null || address.isEmpty()) {</b>
+<b class="fc">&nbsp;            return false;</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return ADDRESS_PATTERN.matcher(address).matches();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public boolean checkDoubleSpending(Transaction transaction) {
+&nbsp;        // Check if the same transaction hash already exists
+<b class="pc">&nbsp;        if (transaction.getTransactionHash() != null) {</b>
+<b class="fc">&nbsp;            boolean exists = transactionRepository.existsByTransactionHash(transaction.getTransactionHash());</b>
+<b class="fc">&nbsp;            if (exists) {</b>
+<b class="fc">&nbsp;                log.warn(&quot;Transaction with same hash already exists: {}&quot;, transaction.getTransactionHash());</b>
+<b class="fc">&nbsp;                return true;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Check if sender has pending transactions that would exceed balance
+<b class="fc">&nbsp;        List&lt;Transaction&gt; pendingTransactions = transactionRepository.findBySenderAddress(transaction.getSenderAddress())</b>
+<b class="fc">&nbsp;                .stream()</b>
+<b class="pc">&nbsp;                .filter(tx -&gt; tx.getStatus() == TransactionStatus.PENDING)</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;
+<b class="fc">&nbsp;        var wallet = walletRepository.findByAddress(transaction.getSenderAddress());</b>
+<b class="pc">&nbsp;        if (wallet.isEmpty()) {</b>
+<b class="nc">&nbsp;            return true; // Wallet doesn&#39;t exist</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        BigDecimal totalPendingAmount = pendingTransactions.stream()</b>
+<b class="fc">&nbsp;                .map(tx -&gt; tx.getAmount().add(tx.getFee()))</b>
+<b class="fc">&nbsp;                .reduce(BigDecimal.ZERO, BigDecimal::add);</b>
+&nbsp;
+<b class="fc">&nbsp;        BigDecimal newTransactionAmount = transaction.getAmount().add(transaction.getFee());</b>
+<b class="fc">&nbsp;        BigDecimal totalRequired = totalPendingAmount.add(newTransactionAmount);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (wallet.get().getBalance().compareTo(totalRequired) &lt; 0) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Double spending detected: insufficient balance for pending + new transaction&quot;);</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculate block hash
+&nbsp;     */
+&nbsp;    private String calculateBlockHash(Block block) {
+<b class="fc">&nbsp;        String data = block.getBlockIndex() +</b>
+<b class="fc">&nbsp;                block.getPreviousHash() +</b>
+<b class="fc">&nbsp;                block.getTimestamp() +</b>
+<b class="fc">&nbsp;                block.getNonce() +</b>
+<b class="fc">&nbsp;                block.getMerkleRoot();</b>
+<b class="fc">&nbsp;        return cryptographyService.hash(data);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Build transaction data for signing/verification
+&nbsp;     */
+&nbsp;    private String buildTransactionData(Transaction transaction) {
+<b class="fc">&nbsp;        return transaction.getSenderAddress() +</b>
+<b class="fc">&nbsp;                transaction.getRecipientAddress() +</b>
+<b class="fc">&nbsp;                transaction.getAmount() +</b>
+<b class="fc">&nbsp;                transaction.getTimestamp();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

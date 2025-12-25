@@ -1,0 +1,158 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > UserService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: UserService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">UserService</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.UserDTO;
+&nbsp;import com.wallet.biochain.enums.Role;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface UserService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a new user
+&nbsp;     */
+&nbsp;    UserDTO createUser(String username, String email, String fullName, String phoneNumber);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get user by ID
+&nbsp;     */
+&nbsp;    Optional&lt;UserDTO&gt; getUserById(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get user by username
+&nbsp;     */
+&nbsp;    Optional&lt;UserDTO&gt; getUserByUsername(String username);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get user by email
+&nbsp;     */
+&nbsp;    Optional&lt;UserDTO&gt; getUserByEmail(String email);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all users
+&nbsp;     */
+&nbsp;    List&lt;UserDTO&gt; getAllUsers();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get active users only
+&nbsp;     */
+&nbsp;    List&lt;UserDTO&gt; getActiveUsers();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Update user information
+&nbsp;     */
+&nbsp;    UserDTO updateUser(Long id, String fullName, String phoneNumber);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Deactivate user account
+&nbsp;     */
+&nbsp;    void deactivateUser(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Activate user account
+&nbsp;     */
+&nbsp;    void activateUser(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Search users by username or email
+&nbsp;     */
+&nbsp;    List&lt;UserDTO&gt; searchUsers(String searchTerm);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check if username exists
+&nbsp;     */
+&nbsp;    boolean usernameExists(String username);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check if email exists
+&nbsp;     */
+&nbsp;    boolean emailExists(String email);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get total active users count
+&nbsp;     */
+&nbsp;    Long countActiveUsers();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Delete user (only if no active wallets)
+&nbsp;     */
+&nbsp;    void deleteUser(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Assign a role to a user (admin service)
+&nbsp;     */
+&nbsp;    void assignRole(Long userId, Role role);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove a role from a user (admin service)
+&nbsp;     */
+&nbsp;    void removeRole(Long userId, Role role);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

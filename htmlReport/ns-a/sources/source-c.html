@@ -1,0 +1,148 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > CryptographyService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: CryptographyService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">CryptographyService$MockitoMock$aOjN4vEc</td>
+  </tr>
+  <tr>
+    <td class="name">CryptographyService$MockitoMock$aOjN4vEc$auxiliary$rRT4HaAv</td>
+  </tr>
+  <tr>
+    <td class="name">CryptographyService$MockitoMock$aOjN4vEc$auxiliary$sw89RyVl</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import java.security.KeyPair;
+&nbsp;
+&nbsp;public interface CryptographyService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Generate RSA key pair
+&nbsp;     */
+&nbsp;    KeyPair generateKeyPair();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Generate wallet address from public key
+&nbsp;     */
+&nbsp;    String generateAddress(String publicKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Encrypt data with public key
+&nbsp;     */
+&nbsp;    String encrypt(String data, String publicKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Decrypt data with private key
+&nbsp;     */
+&nbsp;    String decrypt(String encryptedData, String privateKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Hash data using SHA-256
+&nbsp;     */
+&nbsp;    String hash(String data);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sign data with private key
+&nbsp;     */
+&nbsp;    String sign(String data, String privateKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Verify signature with public key
+&nbsp;     */
+&nbsp;    boolean verifySignature(String data, String signature, String publicKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Encode public key to string
+&nbsp;     */
+&nbsp;    String encodePublicKey(java.security.PublicKey publicKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Encode private key to string
+&nbsp;     */
+&nbsp;    String encodePrivateKey(java.security.PrivateKey privateKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Decode public key from string
+&nbsp;     */
+&nbsp;    java.security.PublicKey decodePublicKey(String publicKeyString);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Decode private key from string
+&nbsp;     */
+&nbsp;    java.security.PrivateKey decodePrivateKey(String privateKeyString);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Encrypt private key with password (for storage)
+&nbsp;     */
+&nbsp;    String encryptPrivateKey(String privateKey, String password);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Decrypt private key with password
+&nbsp;     */
+&nbsp;    String decryptPrivateKey(String encryptedPrivateKey, String password);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

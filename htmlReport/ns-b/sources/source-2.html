@@ -1,0 +1,129 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > StakeRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.repositories</a>
+</div>
+
+<h1>Coverage Summary for Class: StakeRepository (com.wallet.biochain.repositories)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">StakeRepository$MockitoMock$JE11hQ0S</td>
+  </tr>
+  <tr>
+    <td class="name">StakeRepository$MockitoMock$JE11hQ0S$auxiliary$3MurJvKH</td>
+  </tr>
+  <tr>
+    <td class="name">StakeRepository$MockitoMock$JE11hQ0S$auxiliary$x7lN8NRy</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.repositories;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Stake;
+&nbsp;import com.wallet.biochain.entities.User;
+&nbsp;import com.wallet.biochain.enums.StakeStatus;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.data.jpa.repository.Query;
+&nbsp;import org.springframework.data.repository.query.Param;
+&nbsp;import org.springframework.stereotype.Repository;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Repository
+&nbsp;public interface StakeRepository extends JpaRepository&lt;Stake, Long&gt; {
+&nbsp;
+&nbsp;    List&lt;Stake&gt; findByUser(User user);
+&nbsp;
+&nbsp;    List&lt;Stake&gt; findByUserId(Long userId);
+&nbsp;
+&nbsp;    List&lt;Stake&gt; findByWalletAddress(String walletAddress);
+&nbsp;
+&nbsp;    List&lt;Stake&gt; findByStatus(StakeStatus status);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT s FROM Stake s WHERE s.walletAddress = :address AND s.status = :status&quot;)
+&nbsp;    List&lt;Stake&gt; findByWalletAddressAndStatus(
+&nbsp;            @Param(&quot;address&quot;) String address,
+&nbsp;            @Param(&quot;status&quot;) StakeStatus status
+&nbsp;    );
+&nbsp;
+&nbsp;    @Query(&quot;SELECT s FROM Stake s WHERE s.status = &#39;ACTIVE&#39; OR s.status = &#39;LOCKED&#39;&quot;)
+&nbsp;    List&lt;Stake&gt; findActiveStakes();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT s FROM Stake s WHERE s.lockedUntil &lt; :now AND s.status = &#39;LOCKED&#39;&quot;)
+&nbsp;    List&lt;Stake&gt; findExpiredLocks(@Param(&quot;now&quot;) LocalDateTime now);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT SUM(s.stakedAmount) FROM Stake s WHERE s.status = &#39;ACTIVE&#39; OR s.status = &#39;LOCKED&#39;&quot;)
+&nbsp;    BigDecimal getTotalStakedAmount();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT SUM(s.stakedAmount) FROM Stake s WHERE s.walletAddress = :address AND (s.status = &#39;ACTIVE&#39; OR s.status = &#39;LOCKED&#39;)&quot;)
+&nbsp;    BigDecimal getTotalStakedAmountByAddress(@Param(&quot;address&quot;) String address);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT SUM(s.rewardsEarned) FROM Stake s WHERE s.walletAddress = :address&quot;)
+&nbsp;    BigDecimal getTotalRewardsByAddress(@Param(&quot;address&quot;) String address);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT COUNT(s) FROM Stake s WHERE s.status = :status&quot;)
+&nbsp;    Long countByStatus(@Param(&quot;status&quot;) StakeStatus status);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT s FROM Stake s WHERE s.status = &#39;ACTIVE&#39; ORDER BY s.stakedAmount DESC&quot;)
+&nbsp;    List&lt;Stake&gt; findTopStakers();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

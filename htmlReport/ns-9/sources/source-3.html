@@ -1,0 +1,380 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BlockchainServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: BlockchainServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BlockchainServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    78,9%
+  </span>
+  <span class="absValue">
+    (15/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (11/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88,7%
+  </span>
+  <span class="absValue">
+    (86/97)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">BlockchainServiceImpl$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    78,9%
+  </span>
+  <span class="absValue">
+    (15/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (11/22)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    88,7%
+  </span>
+  <span class="absValue">
+    (86/97)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.config.BlockchainConfig;
+&nbsp;import com.wallet.biochain.dto.BlockchainStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Blockchain;
+&nbsp;import com.wallet.biochain.enums.ConsensusType;
+&nbsp;import com.wallet.biochain.mappers.BlockchainMapper;
+&nbsp;import com.wallet.biochain.repositories.BlockRepository;
+&nbsp;import com.wallet.biochain.repositories.BlockchainRepository;
+&nbsp;import com.wallet.biochain.repositories.TransactionRepository;
+&nbsp;import com.wallet.biochain.services.BlockService;
+&nbsp;import com.wallet.biochain.services.BlockchainService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class BlockchainServiceImpl implements BlockchainService {
+&nbsp;
+&nbsp;    private final BlockchainRepository blockchainRepository;
+&nbsp;    private final BlockRepository blockRepository;
+&nbsp;    private final TransactionRepository transactionRepository;
+&nbsp;    private final BlockService blockService;
+&nbsp;    private final BlockchainMapper blockchainMapper;
+&nbsp;    private final BlockchainConfig blockchainConfig;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public Blockchain initializeBlockchain(String name, ConsensusType consensusType) {
+<b class="fc">&nbsp;        log.info(&quot;Initializing blockchain: {} with consensus: {}&quot;, name, consensusType);</b>
+&nbsp;
+<b class="fc">&nbsp;        Optional&lt;Blockchain&gt; existing = blockchainRepository.findByName(name);</b>
+<b class="fc">&nbsp;        if (existing.isPresent()) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;Blockchain already exists: {}&quot;, name);</b>
+<b class="fc">&nbsp;            return existing.get();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Block genesisBlock = createGenesisBlock();</b>
+<b class="fc">&nbsp;        Block savedGenesisBlock = blockRepository.save(genesisBlock);</b>
+&nbsp;
+<b class="fc">&nbsp;        Blockchain blockchain = new Blockchain();</b>
+<b class="fc">&nbsp;        blockchain.setChainId(blockchainConfig.getChainId());</b>
+<b class="fc">&nbsp;        blockchain.setName(name);</b>
+<b class="fc">&nbsp;        blockchain.setGenesisHash(savedGenesisBlock.getHash());</b>
+<b class="fc">&nbsp;        blockchain.setCurrentHeight(0);</b>
+<b class="fc">&nbsp;        blockchain.setDifficulty(blockchainConfig.getMining().getInitialDifficulty());</b>
+<b class="fc">&nbsp;        blockchain.setBlockReward(blockchainConfig.getMining().getInitialReward());</b>
+<b class="fc">&nbsp;        blockchain.setBlockTimeSeconds((int) (blockchainConfig.getMining().getTargetBlockTime() / 1000));</b>
+<b class="fc">&nbsp;        blockchain.setConsensusType(consensusType);</b>
+<b class="fc">&nbsp;        blockchain.setIsValid(true);</b>
+&nbsp;
+<b class="fc">&nbsp;        Blockchain savedBlockchain = blockchainRepository.save(blockchain);</b>
+<b class="fc">&nbsp;        savedGenesisBlock.setBlockchain(savedBlockchain);</b>
+<b class="fc">&nbsp;        blockRepository.save(savedGenesisBlock);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Blockchain initialized successfully&quot;);</b>
+<b class="fc">&nbsp;        return savedBlockchain;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;Blockchain&gt; getBlockchainById(Long id) {
+<b class="nc">&nbsp;        return blockchainRepository.findById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;Blockchain&gt; getBlockchainByChainId(String chainId) {
+<b class="nc">&nbsp;        return blockchainRepository.findByChainId(chainId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public BlockchainStatusDTO getBlockchainStatus(String chainId) {
+<b class="fc">&nbsp;        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);</b>
+&nbsp;
+<b class="fc">&nbsp;        Integer totalTx = transactionRepository.findAll().size();</b>
+<b class="fc">&nbsp;        Integer pendingTx = transactionRepository.findByStatus(</b>
+<b class="fc">&nbsp;                com.wallet.biochain.enums.TransactionStatus.PENDING).size();</b>
+&nbsp;
+&nbsp;        // Try to find latest block by blockchain ID first, fallback to global latest block
+<b class="fc">&nbsp;        Optional&lt;Block&gt; latestBlock = blockRepository.findLatestBlockByBlockchainId(blockchain.getId());</b>
+<b class="pc">&nbsp;        if (latestBlock.isEmpty()) {</b>
+<b class="fc">&nbsp;            latestBlock = blockRepository.findLatestBlock();</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        Integer avgBlockTime = calculateAverageBlockTime(blockchain.getId());</b>
+&nbsp;
+&nbsp;        // Update currentHeight from the actual latest block
+<b class="pc">&nbsp;        if (latestBlock.isPresent()) {</b>
+<b class="nc">&nbsp;            blockchain.setCurrentHeight(latestBlock.get().getBlockIndex());</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return blockchainMapper.toStatusDTO(blockchain, totalTx, pendingTx, avgBlockTime,</b>
+<b class="fc">&nbsp;                latestBlock.orElse(null));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Helper method to find blockchain by chainId, name, or partial match
+&nbsp;     */
+&nbsp;    private Blockchain findBlockchainByChainIdOrName(String identifier) {
+&nbsp;        // Try exact match by chainId
+<b class="fc">&nbsp;        return blockchainRepository.findByChainId(identifier)</b>
+&nbsp;                // Try exact match by name
+<b class="fc">&nbsp;                .or(() -&gt; blockchainRepository.findByName(identifier))</b>
+&nbsp;                // Try partial match (chainId starts with identifier)
+<b class="fc">&nbsp;                .or(() -&gt; blockchainRepository.findAll().stream()</b>
+<b class="pc">&nbsp;                        .filter(b -&gt; b.getChainId().startsWith(identifier) || b.getName().toLowerCase().contains(identifier.toLowerCase()))</b>
+<b class="fc">&nbsp;                        .findFirst())</b>
+&nbsp;                // Return first blockchain if identifier is common like &quot;biochain-main&quot; or &quot;default&quot;
+<b class="fc">&nbsp;                .or(() -&gt; {</b>
+<b class="pc">&nbsp;                    if (identifier.equals(&quot;biochain-main&quot;) || identifier.equals(&quot;default&quot;)) {</b>
+<b class="nc">&nbsp;                        return blockchainRepository.findAll().stream().findFirst();</b>
+&nbsp;                    }
+<b class="fc">&nbsp;                    return Optional.empty();</b>
+&nbsp;                })
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Blockchain not found: &quot; + identifier));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Blockchain&gt; getAllBlockchains() {
+<b class="nc">&nbsp;        return blockchainRepository.findAll();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void addBlockToChain(String chainId, Block block) {
+<b class="fc">&nbsp;        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (block.getBlockIndex() != blockchain.getCurrentHeight() + 1) {</b>
+<b class="fc">&nbsp;            throw new IllegalStateException(&quot;Invalid block index&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        block.setBlockchain(blockchain);</b>
+<b class="fc">&nbsp;        blockRepository.save(block);</b>
+&nbsp;
+<b class="fc">&nbsp;        blockchain.setCurrentHeight(block.getBlockIndex());</b>
+<b class="fc">&nbsp;        blockchainRepository.save(blockchain);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean validateBlockchain(String chainId) {
+<b class="fc">&nbsp;        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Block&gt; blocks = blockRepository.findByBlockchainId(blockchain.getId());</b>
+<b class="fc">&nbsp;        return blockService.validateBlockchain(blocks);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Integer getBlockchainHeight(String chainId) {
+&nbsp;        // Try to get actual height from latest block
+<b class="fc">&nbsp;        Optional&lt;Block&gt; latestBlock = blockRepository.findLatestBlock();</b>
+<b class="pc">&nbsp;        if (latestBlock.isPresent()) {</b>
+<b class="nc">&nbsp;            return latestBlock.get().getBlockIndex();</b>
+&nbsp;        }
+<b class="fc">&nbsp;        return findBlockchainByChainIdOrName(chainId).getCurrentHeight();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void updateDifficulty(String chainId, Integer newDifficulty) {
+<b class="fc">&nbsp;        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);</b>
+&nbsp;
+<b class="fc">&nbsp;        blockchain.setDifficulty(newDifficulty);</b>
+<b class="fc">&nbsp;        blockchainRepository.save(blockchain);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Block getGenesisBlock(String chainId) {
+<b class="fc">&nbsp;        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);</b>
+&nbsp;
+<b class="fc">&nbsp;        return blockRepository.findByHash(blockchain.getGenesisHash())</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalStateException(&quot;Genesis block not found&quot;));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean checkIntegrity(String chainId) {
+<b class="fc">&nbsp;        return validateBlockchain(chainId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Integer getTotalTransactions(String chainId) {
+<b class="fc">&nbsp;        Blockchain blockchain = findBlockchainByChainIdOrName(chainId);</b>
+&nbsp;
+<b class="fc">&nbsp;        return blockRepository.findByBlockchainId(blockchain.getId()).stream()</b>
+<b class="pc">&nbsp;                .mapToInt(block -&gt; block.getTransactions() != null ? block.getTransactions().size() : 0)</b>
+<b class="fc">&nbsp;                .sum();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void synchronizeBlockchain(String chainId) {
+<b class="nc">&nbsp;        log.info(&quot;Synchronization delegated to BlockchainSyncService&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Block createGenesisBlock() {
+<b class="fc">&nbsp;        Block genesisBlock = new Block();</b>
+<b class="fc">&nbsp;        genesisBlock.setBlockIndex(0);</b>
+<b class="fc">&nbsp;        genesisBlock.setPreviousHash(blockchainConfig.getGenesis().getPreviousHash());</b>
+<b class="fc">&nbsp;        genesisBlock.setTimestamp(blockchainConfig.getGenesis().getTimestamp());</b>
+<b class="fc">&nbsp;        genesisBlock.setNonce(0);</b>
+<b class="fc">&nbsp;        genesisBlock.setDifficulty(blockchainConfig.getMining().getInitialDifficulty());</b>
+<b class="fc">&nbsp;        genesisBlock.setMinerAddress(blockchainConfig.getGenesis().getMinerAddress());</b>
+<b class="fc">&nbsp;        genesisBlock.setTransactions(new ArrayList&lt;&gt;());</b>
+&nbsp;
+<b class="fc">&nbsp;        String merkleRoot = blockService.calculateMerkleRoot(genesisBlock.getTransactions());</b>
+<b class="fc">&nbsp;        genesisBlock.setMerkleRoot(merkleRoot);</b>
+&nbsp;
+<b class="fc">&nbsp;        String hash = blockService.calculateBlockHash(genesisBlock);</b>
+<b class="fc">&nbsp;        genesisBlock.setHash(hash);</b>
+&nbsp;
+<b class="fc">&nbsp;        return genesisBlock;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    private Integer calculateAverageBlockTime(Long blockchainId) {
+<b class="fc">&nbsp;        List&lt;Block&gt; blocks = blockRepository.findByBlockchainId(blockchainId).stream()</b>
+<b class="fc">&nbsp;                .sorted((b1, b2) -&gt; b2.getBlockIndex().compareTo(b1.getBlockIndex()))</b>
+<b class="fc">&nbsp;                .limit(10)</b>
+<b class="fc">&nbsp;                .toList();</b>
+&nbsp;
+<b class="pc">&nbsp;        if (blocks.size() &lt; 2) {</b>
+<b class="fc">&nbsp;            return blockchainConfig.getMining().getTargetBlockTime().intValue() / 1000;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        long totalTime = 0;</b>
+<b class="nc">&nbsp;        for (int i = 0; i &lt; blocks.size() - 1; i++) {</b>
+<b class="nc">&nbsp;            totalTime += blocks.get(i).getTimestamp() - blocks.get(i + 1).getTimestamp();</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return (int) (totalTime / (blocks.size() - 1) / 1000);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

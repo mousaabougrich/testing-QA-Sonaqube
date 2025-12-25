@@ -1,0 +1,529 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BlockchainSyncServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: BlockchainSyncServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BlockchainSyncServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (9/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    57,3%
+  </span>
+  <span class="absValue">
+    (47/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68,1%
+  </span>
+  <span class="absValue">
+    (113/166)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">BlockchainSyncServiceImpl$$SpringCGLIB$$0</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    75%
+  </span>
+  <span class="absValue">
+    (9/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    57,3%
+  </span>
+  <span class="absValue">
+    (47/82)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    68,1%
+  </span>
+  <span class="absValue">
+    (113/166)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.config.NetworkConfig;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Node;
+&nbsp;import com.wallet.biochain.enums.NodeStatus;
+&nbsp;import com.wallet.biochain.repositories.BlockRepository;
+&nbsp;import com.wallet.biochain.repositories.NodeRepository;
+&nbsp;import com.wallet.biochain.services.BlockService;
+&nbsp;import com.wallet.biochain.services.BlockchainService;
+&nbsp;import com.wallet.biochain.services.BlockchainSyncService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class BlockchainSyncServiceImpl implements BlockchainSyncService {
+&nbsp;
+&nbsp;    private final BlockRepository blockRepository;
+&nbsp;    private final NodeRepository nodeRepository;
+&nbsp;    private final BlockService blockService;
+&nbsp;    private final BlockchainService blockchainService;
+&nbsp;    private final NetworkConfig networkConfig;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void synchronize() {
+<b class="fc">&nbsp;        log.info(&quot;Starting blockchain synchronization&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        if (activeNodes.isEmpty()) {</b>
+<b class="fc">&nbsp;            log.warn(&quot;No active nodes available for synchronization&quot;);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Find node with highest block height
+<b class="fc">&nbsp;        Node bestNode = activeNodes.stream()</b>
+<b class="fc">&nbsp;                .filter(node -&gt; node.getBlockHeight() != null)</b>
+<b class="fc">&nbsp;                .max((n1, n2) -&gt; Integer.compare(n1.getBlockHeight(), n2.getBlockHeight()))</b>
+<b class="fc">&nbsp;                .orElse(null);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (bestNode != null &amp;&amp; bestNode.getBlockHeight() != null) {</b>
+<b class="fc">&nbsp;            log.info(&quot;Selected peer {} with block height {} for synchronization&quot;,</b>
+<b class="fc">&nbsp;                    bestNode.getNodeId(), bestNode.getBlockHeight());</b>
+<b class="fc">&nbsp;            synchronizeWithPeer(bestNode.getNodeId());</b>
+&nbsp;        } else {
+<b class="fc">&nbsp;            log.warn(&quot;No suitable peer found for synchronization&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Blockchain synchronization completed&quot;);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void synchronizeWithPeer(String peerNodeId) {
+<b class="fc">&nbsp;        log.info(&quot;Synchronizing with peer: {}&quot;, peerNodeId);</b>
+&nbsp;
+<b class="fc">&nbsp;        Node peer = nodeRepository.findByNodeId(peerNodeId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Peer not found: &quot; + peerNodeId));</b>
+&nbsp;
+<b class="fc">&nbsp;        Integer currentHeight = blockRepository.findMaxBlockIndex();</b>
+<b class="fc">&nbsp;        Integer peerHeight = peer.getBlockHeight();</b>
+&nbsp;
+<b class="pc">&nbsp;        if (currentHeight == null) {</b>
+<b class="nc">&nbsp;            currentHeight = -1;</b>
+&nbsp;        }
+&nbsp;
+<b class="pc">&nbsp;        if (peerHeight == null || peerHeight &lt;= currentHeight) {</b>
+<b class="fc">&nbsp;            log.info(&quot;Already up to date. Current height: {}, Peer height: {}&quot;,</b>
+&nbsp;                    currentHeight, peerHeight);
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Peer is ahead. Current height: {}, Peer height: {}&quot;, currentHeight, peerHeight);</b>
+&nbsp;
+&nbsp;        // Request missing blocks in batches
+<b class="fc">&nbsp;        int batchSize = networkConfig.getSync().getBatchSize();</b>
+<b class="fc">&nbsp;        int fromIndex = currentHeight + 1;</b>
+&nbsp;
+<b class="pc">&nbsp;        while (fromIndex &lt;= peerHeight) {</b>
+<b class="fc">&nbsp;            int toIndex = Math.min(fromIndex + batchSize - 1, peerHeight);</b>
+&nbsp;
+<b class="fc">&nbsp;            log.debug(&quot;Requesting blocks {}-{} from peer {}&quot;, fromIndex, toIndex, peerNodeId);</b>
+&nbsp;
+&nbsp;            try {
+<b class="fc">&nbsp;                List&lt;Block&gt; missingBlocks = requestBlocksFromPeer(peerNodeId, fromIndex, toIndex);</b>
+&nbsp;
+<b class="pc">&nbsp;                if (missingBlocks.isEmpty()) {</b>
+<b class="fc">&nbsp;                    log.warn(&quot;No blocks received from peer, stopping synchronization&quot;);</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                if (validateReceivedBlocks(missingBlocks)) {</b>
+<b class="nc">&nbsp;                    addSynchronizedBlocks(missingBlocks);</b>
+<b class="nc">&nbsp;                    fromIndex = toIndex + 1;</b>
+&nbsp;                } else {
+<b class="nc">&nbsp;                    log.error(&quot;Received blocks validation failed, stopping synchronization&quot;);</b>
+&nbsp;                    break;
+&nbsp;                }
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Error during synchronization&quot;, e);</b>
+&nbsp;                break;
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Synchronization with peer {} completed&quot;, peerNodeId);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Block&gt; getMissingBlocks(Integer fromIndex, Integer toIndex) {
+<b class="fc">&nbsp;        log.debug(&quot;Identifying missing blocks from {} to {}&quot;, fromIndex, toIndex);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Block&gt; allBlocks = blockRepository.findBlocksInRange(fromIndex, toIndex);</b>
+<b class="fc">&nbsp;        List&lt;Block&gt; missingBlocks = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;        // Check which blocks are missing in the range
+<b class="fc">&nbsp;        for (int i = fromIndex; i &lt;= toIndex; i++) {</b>
+<b class="fc">&nbsp;            final int index = i;</b>
+<b class="fc">&nbsp;            boolean exists = allBlocks.stream()</b>
+<b class="fc">&nbsp;                    .anyMatch(b -&gt; b.getBlockIndex().equals(index));</b>
+&nbsp;
+<b class="fc">&nbsp;            if (!exists) {</b>
+<b class="fc">&nbsp;                log.debug(&quot;Block {} is missing&quot;, index);</b>
+&nbsp;                // Create placeholder for missing block (would be filled by network request)
+<b class="fc">&nbsp;                Block missingBlock = new Block();</b>
+<b class="fc">&nbsp;                missingBlock.setBlockIndex(index);</b>
+<b class="fc">&nbsp;                missingBlocks.add(missingBlock);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.debug(&quot;Found {} missing blocks&quot;, missingBlocks.size());</b>
+<b class="fc">&nbsp;        return missingBlocks;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    public List&lt;Block&gt; requestBlocksFromPeer(String peerNodeId, Integer fromIndex, Integer toIndex) {
+<b class="fc">&nbsp;        log.info(&quot;Requesting blocks {}-{} from peer {}&quot;, fromIndex, toIndex, peerNodeId);</b>
+&nbsp;
+<b class="fc">&nbsp;        Node peer = nodeRepository.findByNodeId(peerNodeId)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Peer not found: &quot; + peerNodeId));</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Block&gt; receivedBlocks = new ArrayList&lt;&gt;();</b>
+&nbsp;
+&nbsp;        try {
+&nbsp;            // In production, this would make an actual network call to the peer
+&nbsp;            // For now, simulate by fetching from local database (if they exist)
+<b class="fc">&nbsp;            receivedBlocks = blockRepository.findBlocksInRange(fromIndex, toIndex);</b>
+&nbsp;
+&nbsp;            // In a real P2P implementation, you would:
+&nbsp;            // 1. Send HTTP/WebSocket request to peer&#39;s node
+&nbsp;            // 2. Peer would query its local blockchain
+&nbsp;            // 3. Peer would return serialized blocks
+&nbsp;            // 4. Deserialize and return blocks
+&nbsp;
+<b class="fc">&nbsp;            log.info(&quot;Received {} blocks from peer {}&quot;, receivedBlocks.size(), peerNodeId);</b>
+&nbsp;
+&nbsp;            // Update peer&#39;s last seen time
+<b class="fc">&nbsp;            peer.setLastSeen(java.time.LocalDateTime.now());</b>
+<b class="fc">&nbsp;            nodeRepository.save(peer);</b>
+&nbsp;
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to request blocks from peer: {}&quot;, peerNodeId, e);</b>
+&nbsp;
+&nbsp;            // Mark peer as problematic if request fails
+<b class="nc">&nbsp;            peer.setStatus(NodeStatus.SYNCING);</b>
+<b class="nc">&nbsp;            nodeRepository.save(peer);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return receivedBlocks;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean validateReceivedBlocks(List&lt;Block&gt; blocks) {
+<b class="fc">&nbsp;        if (blocks == null || blocks.isEmpty()) {</b>
+<b class="fc">&nbsp;            log.debug(&quot;No blocks to validate&quot;);</b>
+<b class="fc">&nbsp;            return true;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.debug(&quot;Validating {} received blocks&quot;, blocks.size());</b>
+&nbsp;
+&nbsp;        // Validate each block individually
+<b class="fc">&nbsp;        for (Block block : blocks) {</b>
+<b class="fc">&nbsp;            var validationResult = blockService.validateBlock(block);</b>
+<b class="fc">&nbsp;            if (!validationResult.isValid()) {</b>
+<b class="fc">&nbsp;                log.error(&quot;Invalid block detected at index {}: {}&quot;,</b>
+<b class="fc">&nbsp;                        block.getBlockIndex(), validationResult.message());</b>
+<b class="fc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate chain continuity
+<b class="fc">&nbsp;        for (int i = 1; i &lt; blocks.size(); i++) {</b>
+<b class="fc">&nbsp;            Block current = blocks.get(i);</b>
+<b class="fc">&nbsp;            Block previous = blocks.get(i - 1);</b>
+&nbsp;
+<b class="fc">&nbsp;            if (!current.getPreviousHash().equals(previous.getHash())) {</b>
+<b class="fc">&nbsp;                log.error(&quot;Chain continuity broken between blocks {} and {}&quot;,</b>
+<b class="fc">&nbsp;                        previous.getBlockIndex(), current.getBlockIndex());</b>
+<b class="fc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;
+<b class="pc">&nbsp;            if (current.getBlockIndex() != previous.getBlockIndex() + 1) {</b>
+<b class="nc">&nbsp;                log.error(&quot;Block index sequence invalid: {} -&gt; {}&quot;,</b>
+<b class="nc">&nbsp;                        previous.getBlockIndex(), current.getBlockIndex());</b>
+<b class="nc">&nbsp;                return false;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate connection to existing chain
+<b class="pc">&nbsp;        if (!blocks.isEmpty()) {</b>
+<b class="fc">&nbsp;            Block firstNewBlock = blocks.get(0);</b>
+<b class="fc">&nbsp;            Integer expectedIndex = firstNewBlock.getBlockIndex();</b>
+&nbsp;
+<b class="pc">&nbsp;            if (expectedIndex &gt; 0) {</b>
+<b class="fc">&nbsp;                Optional&lt;Block&gt; previousBlock = blockRepository.findByBlockIndex(expectedIndex - 1);</b>
+&nbsp;
+<b class="pc">&nbsp;                if (previousBlock.isPresent()) {</b>
+<b class="nc">&nbsp;                    if (!firstNewBlock.getPreviousHash().equals(previousBlock.get().getHash())) {</b>
+<b class="nc">&nbsp;                        log.error(&quot;New blocks do not connect to existing chain&quot;);</b>
+<b class="nc">&nbsp;                        return false;</b>
+&nbsp;                    }
+&nbsp;                }
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;All received blocks validated successfully&quot;);</b>
+<b class="fc">&nbsp;        return true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void addSynchronizedBlocks(List&lt;Block&gt; blocks) {
+<b class="fc">&nbsp;        log.info(&quot;Adding {} synchronized blocks to chain&quot;, blocks.size());</b>
+&nbsp;
+<b class="fc">&nbsp;        int successCount = 0;</b>
+<b class="fc">&nbsp;        int failCount = 0;</b>
+&nbsp;
+<b class="fc">&nbsp;        for (Block block : blocks) {</b>
+&nbsp;            try {
+&nbsp;                // Check if block already exists
+<b class="pc">&nbsp;                if (blockRepository.existsByBlockIndex(block.getBlockIndex())) {</b>
+<b class="fc">&nbsp;                    log.debug(&quot;Block {} already exists, skipping&quot;, block.getBlockIndex());</b>
+&nbsp;                    continue;
+&nbsp;                }
+&nbsp;
+&nbsp;                // Save block
+<b class="nc">&nbsp;                Block savedBlock = blockService.addBlock(block);</b>
+&nbsp;
+&nbsp;                // Update blockchain height if needed
+<b class="nc">&nbsp;                String chainId = networkConfig.getNode().getNodeId();</b>
+&nbsp;                try {
+<b class="nc">&nbsp;                    var blockchain = blockchainService.getBlockchainByChainId(chainId);</b>
+<b class="nc">&nbsp;                    if (blockchain.isPresent() &amp;&amp;</b>
+<b class="nc">&nbsp;                            savedBlock.getBlockIndex() &gt; blockchain.get().getCurrentHeight()) {</b>
+<b class="nc">&nbsp;                        blockchainService.addBlockToChain(chainId, savedBlock);</b>
+&nbsp;                    }
+&nbsp;                } catch (Exception e) {
+<b class="nc">&nbsp;                    log.warn(&quot;Could not update blockchain height&quot;, e);</b>
+&nbsp;                }
+&nbsp;
+<b class="nc">&nbsp;                successCount++;</b>
+<b class="nc">&nbsp;                log.debug(&quot;Added block {} to chain&quot;, block.getBlockIndex());</b>
+&nbsp;
+&nbsp;            } catch (Exception e) {
+<b class="nc">&nbsp;                log.error(&quot;Failed to add block {}: {}&quot;, block.getBlockIndex(), e.getMessage());</b>
+<b class="nc">&nbsp;                failCount++;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Synchronized blocks added: {} successful, {} failed&quot;, successCount, failCount);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean needsSynchronization() {
+<b class="fc">&nbsp;        Integer currentHeight = blockRepository.findMaxBlockIndex();</b>
+<b class="fc">&nbsp;        if (currentHeight == null) {</b>
+<b class="fc">&nbsp;            currentHeight = -1;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Check if any active peer has higher block height
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+&nbsp;
+<b class="fc">&nbsp;        for (Node node : activeNodes) {</b>
+<b class="pc">&nbsp;            if (node.getBlockHeight() != null &amp;&amp; node.getBlockHeight() &gt; currentHeight) {</b>
+<b class="fc">&nbsp;                log.info(&quot;Synchronization needed. Current height: {}, Peer {} height: {}&quot;,</b>
+<b class="fc">&nbsp;                        currentHeight, node.getNodeId(), node.getBlockHeight());</b>
+<b class="fc">&nbsp;                return true;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        log.debug(&quot;No synchronization needed. Current height: {}&quot;, currentHeight);</b>
+<b class="fc">&nbsp;        return false;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Integer getSyncProgress() {
+<b class="fc">&nbsp;        Integer currentHeight = blockRepository.findMaxBlockIndex();</b>
+<b class="pc">&nbsp;        if (currentHeight == null) {</b>
+<b class="nc">&nbsp;            currentHeight = 0;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Find maximum height among active peers
+<b class="fc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+<b class="fc">&nbsp;        Integer maxPeerHeight = activeNodes.stream()</b>
+<b class="fc">&nbsp;                .map(Node::getBlockHeight)</b>
+<b class="pc">&nbsp;                .filter(h -&gt; h != null)</b>
+<b class="fc">&nbsp;                .max(Integer::compare)</b>
+<b class="fc">&nbsp;                .orElse(currentHeight);</b>
+&nbsp;
+<b class="fc">&nbsp;        if (maxPeerHeight == 0) {</b>
+<b class="fc">&nbsp;            return 100;</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        int progress = (int) ((currentHeight * 100.0) / maxPeerHeight);</b>
+<b class="fc">&nbsp;        log.debug(&quot;Sync progress: {}% ({}/{})&quot;, progress, currentHeight, maxPeerHeight);</b>
+&nbsp;
+<b class="fc">&nbsp;        return progress;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void resolveConflicts() {
+<b class="nc">&nbsp;        log.info(&quot;Resolving blockchain conflicts&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Node&gt; activeNodes = nodeRepository.findByStatus(NodeStatus.ACTIVE);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (activeNodes.isEmpty()) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;No active nodes to resolve conflicts with&quot;);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Find node with longest valid chain
+<b class="nc">&nbsp;        Node longestChainNode = activeNodes.stream()</b>
+<b class="nc">&nbsp;                .filter(node -&gt; node.getBlockHeight() != null)</b>
+<b class="nc">&nbsp;                .max((n1, n2) -&gt; Integer.compare(n1.getBlockHeight(), n2.getBlockHeight()))</b>
+<b class="nc">&nbsp;                .orElse(null);</b>
+&nbsp;
+<b class="nc">&nbsp;        if (longestChainNode == null) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;No suitable node found for conflict resolution&quot;);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Integer currentHeight = blockRepository.findMaxBlockIndex();</b>
+<b class="nc">&nbsp;        if (currentHeight == null) {</b>
+<b class="nc">&nbsp;            currentHeight = -1;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        Integer peerHeight = longestChainNode.getBlockHeight();</b>
+&nbsp;
+<b class="nc">&nbsp;        if (peerHeight &gt; currentHeight) {</b>
+<b class="nc">&nbsp;            log.info(&quot;Adopting longer chain from node: {} (height: {})&quot;,</b>
+<b class="nc">&nbsp;                    longestChainNode.getNodeId(), peerHeight);</b>
+&nbsp;
+&nbsp;            // Synchronize with the peer that has the longest chain
+<b class="nc">&nbsp;            synchronizeWithPeer(longestChainNode.getNodeId());</b>
+&nbsp;
+<b class="nc">&nbsp;            log.info(&quot;Conflict resolution completed&quot;);</b>
+&nbsp;        } else {
+<b class="nc">&nbsp;            log.info(&quot;Current chain is already the longest, no conflict to resolve&quot;);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check if a specific block exists locally
+&nbsp;     */
+&nbsp;    private boolean blockExists(Integer blockIndex) {
+<b class="nc">&nbsp;        return blockRepository.existsByBlockIndex(blockIndex);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blocks that need to be synchronized
+&nbsp;     */
+&nbsp;    private List&lt;Integer&gt; getBlocksToSync(Integer fromIndex, Integer toIndex) {
+<b class="nc">&nbsp;        List&lt;Integer&gt; blocksToSync = new ArrayList&lt;&gt;();</b>
+&nbsp;
+<b class="nc">&nbsp;        for (int i = fromIndex; i &lt;= toIndex; i++) {</b>
+<b class="nc">&nbsp;            if (!blockExists(i)) {</b>
+<b class="nc">&nbsp;                blocksToSync.add(i);</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return blocksToSync;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

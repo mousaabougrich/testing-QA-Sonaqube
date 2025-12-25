@@ -1,0 +1,227 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BlockchainSyncController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: BlockchainSyncController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BlockchainSyncController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    10%
+  </span>
+  <span class="absValue">
+    (1/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2,9%
+  </span>
+  <span class="absValue">
+    (1/34)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.services.BlockchainSyncService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/sync&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@Tag(name = &quot;Blockchain Sync&quot;, description = &quot;Blockchain synchronization endpoints&quot;)
+&nbsp;public class BlockchainSyncController {
+&nbsp;
+&nbsp;    private final BlockchainSyncService syncService;
+&nbsp;
+&nbsp;    @PostMapping(&quot;/synchronize&quot;)
+&nbsp;    @Operation(summary = &quot;Synchronize blockchain&quot;, description = &quot;Synchronizes blockchain with best peer&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; synchronize() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to synchronize blockchain&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        syncService.synchronize();</b>
+<b class="nc">&nbsp;        return ResponseEntity.accepted().build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/synchronize-with-peer&quot;)
+&nbsp;    @Operation(summary = &quot;Synchronize with peer&quot;, description = &quot;Synchronizes blockchain with specific peer&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; synchronizeWithPeer(@RequestParam String peerNodeId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to synchronize with peer: {}&quot;, peerNodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            syncService.synchronizeWithPeer(peerNodeId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to synchronize with peer&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/missing-blocks&quot;)
+&nbsp;    @Operation(summary = &quot;Get missing blocks&quot;, description = &quot;Identifies missing blocks in range&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Block&gt;&gt; getMissingBlocks(
+&nbsp;            @RequestParam Integer fromIndex,
+&nbsp;            @RequestParam Integer toIndex) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get missing blocks from {} to {}&quot;, fromIndex, toIndex);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Block&gt; missingBlocks = syncService.getMissingBlocks(fromIndex, toIndex);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(missingBlocks);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/request-blocks&quot;)
+&nbsp;    @Operation(summary = &quot;Request blocks from peer&quot;, description = &quot;Requests blocks from a peer node&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Block&gt;&gt; requestBlocksFromPeer(
+&nbsp;            @RequestParam String peerNodeId,
+&nbsp;            @RequestParam Integer fromIndex,
+&nbsp;            @RequestParam Integer toIndex) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to request blocks {}-{} from peer: {}&quot;, fromIndex, toIndex, peerNodeId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Block&gt; blocks = syncService.requestBlocksFromPeer(peerNodeId, fromIndex, toIndex);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(blocks);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to request blocks&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/validate-blocks&quot;)
+&nbsp;    @Operation(summary = &quot;Validate received blocks&quot;, description = &quot;Validates a list of blocks&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; validateReceivedBlocks(@RequestBody List&lt;Block&gt; blocks) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to validate {} blocks&quot;, blocks.size());</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean isValid = syncService.validateReceivedBlocks(blocks);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(isValid);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/add-blocks&quot;)
+&nbsp;    @Operation(summary = &quot;Add synchronized blocks&quot;, description = &quot;Adds validated blocks to chain&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; addSynchronizedBlocks(@RequestBody List&lt;Block&gt; blocks) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to add {} synchronized blocks&quot;, blocks.size());</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            syncService.addSynchronizedBlocks(blocks);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to add synchronized blocks&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/needs-synchronization&quot;)
+&nbsp;    @Operation(summary = &quot;Check if sync needed&quot;, description = &quot;Checks if synchronization is needed&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; needsSynchronization() {
+<b class="nc">&nbsp;        log.debug(&quot;REST request to check if synchronization is needed&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        boolean needsSync = syncService.needsSynchronization();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(needsSync);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/sync-progress&quot;)
+&nbsp;    @Operation(summary = &quot;Get sync progress&quot;, description = &quot;Gets synchronization progress percentage&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getSyncProgress() {
+<b class="nc">&nbsp;        log.debug(&quot;REST request to get sync progress&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        Integer progress = syncService.getSyncProgress();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(progress);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/resolve-conflicts&quot;)
+&nbsp;    @Operation(summary = &quot;Resolve conflicts&quot;, description = &quot;Resolves blockchain conflicts (longest chain)&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; resolveConflicts() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to resolve blockchain conflicts&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        syncService.resolveConflicts();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok().build();</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

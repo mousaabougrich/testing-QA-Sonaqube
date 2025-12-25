@@ -1,0 +1,243 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NetworkConfig</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.config</a>
+</div>
+
+<h1>Coverage Summary for Class: NetworkConfig (com.wallet.biochain.config)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">NetworkConfig</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">NetworkConfig$$SpringCGLIB$$0</td>
+  </tr>
+  <tr>
+    <td class="name">NetworkConfig$Node</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/7)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">NetworkConfig$P2P</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (8/8)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">NetworkConfig$Sync</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (24/24)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.config;
+&nbsp;
+&nbsp;import lombok.Getter;
+&nbsp;import lombok.Setter;
+&nbsp;import org.springframework.boot.context.properties.ConfigurationProperties;
+&nbsp;import org.springframework.context.annotation.Configuration;
+&nbsp;
+&nbsp;import java.util.ArrayList;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * P2P Network configuration properties
+&nbsp; */
+&nbsp;@Getter
+&nbsp;@Setter
+&nbsp;@Configuration
+&nbsp;@ConfigurationProperties(prefix = &quot;network&quot;)
+<b class="fc">&nbsp;public class NetworkConfig {</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Node configuration
+&nbsp;     */
+<b class="fc">&nbsp;    private Node node = new Node();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * P2P network settings
+&nbsp;     */
+<b class="fc">&nbsp;    private P2P p2p = new P2P();</b>
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sync configuration
+&nbsp;     */
+<b class="fc">&nbsp;    private Sync sync = new Sync();</b>
+&nbsp;
+&nbsp;    @Getter
+&nbsp;    @Setter
+<b class="fc">&nbsp;    public static class Node {</b>
+<b class="fc">&nbsp;        private String nodeId = generateNodeId();</b>
+<b class="fc">&nbsp;        private String host = &quot;localhost&quot;;</b>
+<b class="fc">&nbsp;        private Integer port = 8545;</b>
+<b class="fc">&nbsp;        private String type = &quot;FULL_NODE&quot;; // FULL_NODE, LIGHT_NODE, MINING_NODE</b>
+<b class="fc">&nbsp;        private Boolean enabled = true;</b>
+&nbsp;
+&nbsp;        private static String generateNodeId() {
+<b class="fc">&nbsp;            return &quot;node-&quot; + System.currentTimeMillis();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Getter
+&nbsp;    @Setter
+<b class="fc">&nbsp;    public static class P2P {</b>
+<b class="fc">&nbsp;        private Integer maxPeers = 50;</b>
+<b class="fc">&nbsp;        private Integer minPeers = 3;</b>
+<b class="fc">&nbsp;        private Long connectionTimeout = 30000L; // 30 seconds</b>
+<b class="fc">&nbsp;        private Long pingInterval = 60000L; // 1 minute</b>
+<b class="fc">&nbsp;        private Long syncInterval = 300000L; // 5 minutes</b>
+<b class="fc">&nbsp;        private List&lt;String&gt; seedNodes = new ArrayList&lt;&gt;(List.of(</b>
+&nbsp;                &quot;localhost:8546&quot;,
+&nbsp;                &quot;localhost:8547&quot;
+&nbsp;        ));
+<b class="fc">&nbsp;        private Boolean discoveryEnabled = true;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Getter
+&nbsp;    @Setter
+<b class="fc">&nbsp;    public static class Sync {</b>
+<b class="fc">&nbsp;        private Integer batchSize = 100; // Blocks to sync at once</b>
+<b class="fc">&nbsp;        private Long timeout = 60000L; // 1 minute</b>
+<b class="fc">&nbsp;        private Boolean autoSync = true;</b>
+<b class="fc">&nbsp;        private Integer maxRetries = 3;</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

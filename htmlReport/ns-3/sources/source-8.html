@@ -1,0 +1,218 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > MiningController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: MiningController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">MiningController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    12,5%
+  </span>
+  <span class="absValue">
+    (1/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    2,2%
+  </span>
+  <span class="absValue">
+    (1/46)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.MiningResultDTO;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.services.MiningService;
+&nbsp;import com.wallet.biochain.services.TransactionService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/mining&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@Tag(name = &quot;Mining&quot;, description = &quot;Mining operations endpoints&quot;)
+&nbsp;public class MiningController {
+&nbsp;
+&nbsp;    private final MiningService miningService;
+&nbsp;    private final TransactionService transactionService;
+&nbsp;
+&nbsp;    @PostMapping(&quot;/mine&quot;)
+&nbsp;    @Operation(summary = &quot;Mine block&quot;, description = &quot;Mines a new block with pending transactions&quot;)
+&nbsp;    public ResponseEntity&lt;MiningResultDTO&gt; mineBlock(@RequestParam String minerAddress) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to mine block for: {}&quot;, minerAddress);</b>
+&nbsp;
+&nbsp;        try {
+&nbsp;            // Get pending transactions
+<b class="nc">&nbsp;            List&lt;Transaction&gt; pendingTxs = transactionService.getPendingTransactions()</b>
+<b class="nc">&nbsp;                    .stream()</b>
+<b class="nc">&nbsp;                    .map(dto -&gt; {</b>
+<b class="nc">&nbsp;                        Transaction tx = new Transaction();</b>
+<b class="nc">&nbsp;                        tx.setTransactionHash(dto.transactionHash());</b>
+<b class="nc">&nbsp;                        tx.setSenderAddress(dto.senderAddress());</b>
+<b class="nc">&nbsp;                        tx.setRecipientAddress(dto.recipientAddress());</b>
+<b class="nc">&nbsp;                        tx.setAmount(dto.amount());</b>
+<b class="nc">&nbsp;                        tx.setFee(dto.fee());</b>
+<b class="nc">&nbsp;                        tx.setTimestamp(dto.timestamp());</b>
+<b class="nc">&nbsp;                        return tx;</b>
+&nbsp;                    })
+<b class="nc">&nbsp;                    .limit(10) // Limit to 10 transactions per block</b>
+<b class="nc">&nbsp;                    .toList();</b>
+&nbsp;
+<b class="nc">&nbsp;            MiningResultDTO result = miningService.mineBlock(pendingTxs, minerAddress);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(result);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Mining failed&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/mine-with-difficulty&quot;)
+&nbsp;    @Operation(summary = &quot;Mine with difficulty&quot;, description = &quot;Mines a block with specific difficulty&quot;)
+&nbsp;    public ResponseEntity&lt;MiningResultDTO&gt; mineBlockWithDifficulty(
+&nbsp;            @RequestParam String minerAddress,
+&nbsp;            @RequestParam Integer difficulty) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to mine block with difficulty {} for: {}&quot;, difficulty, minerAddress);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Transaction&gt; pendingTxs = transactionService.getPendingTransactions()</b>
+<b class="nc">&nbsp;                    .stream()</b>
+<b class="nc">&nbsp;                    .map(dto -&gt; {</b>
+<b class="nc">&nbsp;                        Transaction tx = new Transaction();</b>
+<b class="nc">&nbsp;                        tx.setTransactionHash(dto.transactionHash());</b>
+<b class="nc">&nbsp;                        tx.setSenderAddress(dto.senderAddress());</b>
+<b class="nc">&nbsp;                        tx.setRecipientAddress(dto.recipientAddress());</b>
+<b class="nc">&nbsp;                        tx.setAmount(dto.amount());</b>
+<b class="nc">&nbsp;                        tx.setFee(dto.fee());</b>
+<b class="nc">&nbsp;                        tx.setTimestamp(dto.timestamp());</b>
+<b class="nc">&nbsp;                        return tx;</b>
+&nbsp;                    })
+<b class="nc">&nbsp;                    .limit(10)</b>
+<b class="nc">&nbsp;                    .toList();</b>
+&nbsp;
+<b class="nc">&nbsp;            MiningResultDTO result = miningService.mineBlockWithDifficulty(pendingTxs, minerAddress, difficulty);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(result);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Mining with difficulty failed&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.internalServerError().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/difficulty&quot;)
+&nbsp;    @Operation(summary = &quot;Get current difficulty&quot;, description = &quot;Gets current mining difficulty&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getCurrentDifficulty() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get current difficulty&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        Integer difficulty = miningService.getCurrentDifficulty();</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(difficulty);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/reward/{blockIndex}&quot;)
+&nbsp;    @Operation(summary = &quot;Calculate mining reward&quot;, description = &quot;Calculates mining reward for block index&quot;)
+&nbsp;    public ResponseEntity&lt;BigDecimal&gt; calculateMiningReward(@PathVariable Integer blockIndex) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to calculate mining reward for block: {}&quot;, blockIndex);</b>
+&nbsp;
+<b class="nc">&nbsp;        BigDecimal reward = miningService.calculateMiningReward(blockIndex);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(reward);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/estimated-time/{difficulty}&quot;)
+&nbsp;    @Operation(summary = &quot;Get estimated mining time&quot;, description = &quot;Gets estimated mining time for difficulty&quot;)
+&nbsp;    public ResponseEntity&lt;Long&gt; getEstimatedMiningTime(@PathVariable Integer difficulty) {
+<b class="nc">&nbsp;        log.debug(&quot;REST request to get estimated mining time for difficulty: {}&quot;, difficulty);</b>
+&nbsp;
+<b class="nc">&nbsp;        Long estimatedTime = miningService.getEstimatedMiningTime(difficulty);</b>
+<b class="nc">&nbsp;        return ResponseEntity.ok(estimatedTime);</b>
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,136 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.repositories</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionRepository (com.wallet.biochain.repositories)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">TransactionRepository$MockitoMock$voU97M0d</td>
+  </tr>
+  <tr>
+    <td class="name">TransactionRepository$MockitoMock$voU97M0d$auxiliary$uwuMinKO</td>
+  </tr>
+  <tr>
+    <td class="name">TransactionRepository$MockitoMock$voU97M0d$auxiliary$zWSjcrsS</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.repositories;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.enums.TransactionStatus;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.data.jpa.repository.Query;
+&nbsp;import org.springframework.data.repository.query.Param;
+&nbsp;import org.springframework.stereotype.Repository;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Repository
+&nbsp;public interface TransactionRepository extends JpaRepository&lt;Transaction, Long&gt; {
+&nbsp;
+&nbsp;    Optional&lt;Transaction&gt; findByTransactionHash(String transactionHash);
+&nbsp;
+&nbsp;    List&lt;Transaction&gt; findBySenderAddress(String senderAddress);
+&nbsp;
+&nbsp;    List&lt;Transaction&gt; findByRecipientAddress(String recipientAddress);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT t FROM Transaction t WHERE t.senderAddress = :address OR t.recipientAddress = :address&quot;)
+&nbsp;    List&lt;Transaction&gt; findByWalletAddress(@Param(&quot;address&quot;) String address);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT t FROM Transaction t WHERE t.senderAddress = :address OR t.recipientAddress = :address ORDER BY t.timestamp DESC&quot;)
+&nbsp;    List&lt;Transaction&gt; findByWalletAddressOrderByTimestampDesc(@Param(&quot;address&quot;) String address);
+&nbsp;
+&nbsp;    List&lt;Transaction&gt; findByStatus(TransactionStatus status);
+&nbsp;
+&nbsp;    List&lt;Transaction&gt; findByBlock(Block block);
+&nbsp;
+&nbsp;    List&lt;Transaction&gt; findByBlockId(Long blockId);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT t FROM Transaction t WHERE t.status = &#39;PENDING&#39; ORDER BY t.fee DESC, t.timestamp ASC&quot;)
+&nbsp;    List&lt;Transaction&gt; findPendingTransactionsOrderedByFee();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT t FROM Transaction t WHERE t.block IS NULL AND t.status = &#39;PENDING&#39;&quot;)
+&nbsp;    List&lt;Transaction&gt; findUnconfirmedTransactions();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT t FROM Transaction t WHERE t.createdAt BETWEEN :startDate AND :endDate&quot;)
+&nbsp;    List&lt;Transaction&gt; findTransactionsBetweenDates(
+&nbsp;            @Param(&quot;startDate&quot;) LocalDateTime startDate,
+&nbsp;            @Param(&quot;endDate&quot;) LocalDateTime endDate
+&nbsp;    );
+&nbsp;
+&nbsp;    @Query(&quot;SELECT COUNT(t) FROM Transaction t WHERE t.status = :status&quot;)
+&nbsp;    Long countByStatus(@Param(&quot;status&quot;) TransactionStatus status);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT SUM(t.amount) FROM Transaction t WHERE t.status = &#39;CONFIRMED&#39;&quot;)
+&nbsp;    BigDecimal getTotalTransactionVolume();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT COUNT(t) FROM Transaction t WHERE t.senderAddress = :address OR t.recipientAddress = :address&quot;)
+&nbsp;    Long countTransactionsByAddress(@Param(&quot;address&quot;) String address);
+&nbsp;
+&nbsp;    boolean existsByTransactionHash(String transactionHash);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

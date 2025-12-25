@@ -1,0 +1,221 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > DevSecurityConfig</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.config</a>
+</div>
+
+<h1>Coverage Summary for Class: DevSecurityConfig (com.wallet.biochain.config)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">DevSecurityConfig</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/6)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/20)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">DevSecurityConfig$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/4)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.config;
+&nbsp;
+&nbsp;import org.springframework.context.annotation.Bean;
+&nbsp;import org.springframework.context.annotation.Configuration;
+&nbsp;import org.springframework.context.annotation.Profile;
+&nbsp;import org.springframework.core.annotation.Order;
+&nbsp;import org.springframework.security.authentication.AuthenticationManager;
+&nbsp;import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+&nbsp;import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+&nbsp;import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+&nbsp;import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+&nbsp;import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+&nbsp;import org.springframework.security.config.http.SessionCreationPolicy;
+&nbsp;import org.springframework.security.core.Authentication;
+&nbsp;import org.springframework.security.core.AuthenticationException;
+&nbsp;import org.springframework.security.core.userdetails.UserDetails;
+&nbsp;import org.springframework.security.core.userdetails.UserDetailsService;
+&nbsp;import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+&nbsp;import org.springframework.security.crypto.password.PasswordEncoder;
+&nbsp;import org.springframework.security.web.SecurityFilterChain;
+&nbsp;import org.springframework.web.cors.CorsConfiguration;
+&nbsp;import org.springframework.web.cors.CorsConfigurationSource;
+&nbsp;import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+&nbsp;
+&nbsp;import java.util.Arrays;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;/**
+&nbsp; * Development Security Configuration
+&nbsp; * This configuration is only active when &quot;dev-nosec&quot; profile is enabled
+&nbsp; * It allows all requests without authentication for easier testing
+&nbsp; *
+&nbsp; * WARNING: DO NOT USE IN PRODUCTION!
+&nbsp; *
+&nbsp; * To enable: Add -Dspring.profiles.active=dev-nosec to your run configuration
+&nbsp; * or set SPRING_PROFILES_ACTIVE=dev-nosec environment variable
+&nbsp; */
+&nbsp;@Configuration
+&nbsp;@EnableWebSecurity
+&nbsp;@EnableMethodSecurity(prePostEnabled = false, securedEnabled = false)
+&nbsp;@Profile(&quot;dev-nosec&quot;)
+&nbsp;@Order(1)
+<b class="nc">&nbsp;public class DevSecurityConfig {</b>
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
+<b class="nc">&nbsp;        http</b>
+<b class="nc">&nbsp;                .csrf(AbstractHttpConfigurer::disable)</b>
+<b class="nc">&nbsp;                .cors(cors -&gt; cors.configurationSource(devCorsConfigurationSource()))</b>
+<b class="nc">&nbsp;                .authorizeHttpRequests(auth -&gt; {</b>
+&nbsp;                    // Allow all requests in dev-nosec mode
+<b class="nc">&nbsp;                    auth.anyRequest().permitAll();</b>
+&nbsp;                })
+<b class="nc">&nbsp;                .sessionManagement(session -&gt; session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));</b>
+&nbsp;
+<b class="nc">&nbsp;        return http.build();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public CorsConfigurationSource devCorsConfigurationSource() {
+<b class="nc">&nbsp;        CorsConfiguration configuration = new CorsConfiguration();</b>
+<b class="nc">&nbsp;        configuration.setAllowedOriginPatterns(Arrays.asList(&quot;http://localhost:*&quot;, &quot;http://127.0.0.1:*&quot;));</b>
+<b class="nc">&nbsp;        configuration.setAllowedMethods(Arrays.asList(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, &quot;OPTIONS&quot;, &quot;PATCH&quot;, &quot;HEAD&quot;));</b>
+<b class="nc">&nbsp;        configuration.setAllowedHeaders(List.of(&quot;*&quot;));</b>
+<b class="nc">&nbsp;        configuration.setAllowCredentials(true);</b>
+<b class="nc">&nbsp;        configuration.setExposedHeaders(Arrays.asList(&quot;Authorization&quot;, &quot;Content-Disposition&quot;));</b>
+<b class="nc">&nbsp;        configuration.setMaxAge(3600L);</b>
+&nbsp;
+<b class="nc">&nbsp;        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</b>
+<b class="nc">&nbsp;        source.registerCorsConfiguration(&quot;/**&quot;, configuration);</b>
+<b class="nc">&nbsp;        return source;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public PasswordEncoder passwordEncoder() {
+<b class="nc">&nbsp;        return NoOpPasswordEncoder.getInstance();</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Bean
+&nbsp;    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService) {
+<b class="nc">&nbsp;        return new AuthenticationManager() {</b>
+&nbsp;            @Override
+&nbsp;            public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+<b class="nc">&nbsp;                String username = (String) authentication.getPrincipal();</b>
+<b class="nc">&nbsp;                UserDetails userDetails = userDetailsService.loadUserByUsername(username);</b>
+&nbsp;                // Skip password check in dev-nosec mode
+<b class="nc">&nbsp;                return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());</b>
+&nbsp;            }
+&nbsp;        };
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

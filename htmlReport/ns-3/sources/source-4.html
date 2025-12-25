@@ -1,0 +1,453 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BlockchainController</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.controllers</a>
+</div>
+
+<h1>Coverage Summary for Class: BlockchainController (com.wallet.biochain.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">BlockchainController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    36,8%
+  </span>
+  <span class="absValue">
+    (7/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    8,3%
+  </span>
+  <span class="absValue">
+    (2/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    22,2%
+  </span>
+  <span class="absValue">
+    (28/126)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.controllers;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.BlockchainStatusDTO;
+&nbsp;import com.wallet.biochain.dto.BlockDTO;
+&nbsp;import com.wallet.biochain.entities.Blockchain;
+&nbsp;import com.wallet.biochain.enums.ConsensusType;
+&nbsp;import com.wallet.biochain.services.BlockService;
+&nbsp;import com.wallet.biochain.services.BlockchainService;
+&nbsp;import io.swagger.v3.oas.annotations.Operation;
+&nbsp;import io.swagger.v3.oas.annotations.tags.Tag;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.http.HttpStatus;
+&nbsp;import org.springframework.http.ResponseEntity;
+&nbsp;import org.springframework.web.bind.annotation.*;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@RestController
+&nbsp;@RequestMapping(&quot;/api/blockchain&quot;)
+&nbsp;@RequiredArgsConstructor
+&nbsp;@Tag(name = &quot;Blockchain&quot;, description = &quot;Blockchain management endpoints&quot;)
+&nbsp;public class BlockchainController {
+&nbsp;
+&nbsp;    private final BlockchainService blockchainService;
+&nbsp;    private final BlockService blockService;
+&nbsp;
+&nbsp;    @PostMapping(&quot;/initialize&quot;)
+&nbsp;    @Operation(summary = &quot;Initialize blockchain&quot;, description = &quot;Initializes a new blockchain with genesis block&quot;)
+&nbsp;    public ResponseEntity&lt;Blockchain&gt; initializeBlockchain(
+&nbsp;            @RequestParam String name,
+&nbsp;            @RequestParam ConsensusType consensusType) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to initialize blockchain: {} with consensus: {}&quot;, name, consensusType);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            Blockchain blockchain = blockchainService.initializeBlockchain(name, consensusType);</b>
+<b class="fc">&nbsp;            return ResponseEntity.status(HttpStatus.CREATED).body(blockchain);</b>
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;Failed to initialize blockchain&quot;, e);</b>
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{chainId}/status&quot;)
+&nbsp;    @Operation(summary = &quot;Get blockchain status&quot;, description = &quot;Gets current blockchain status and statistics&quot;)
+&nbsp;    public ResponseEntity&lt;BlockchainStatusDTO&gt; getBlockchainStatus(@PathVariable String chainId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get blockchain status: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            BlockchainStatusDTO status = blockchainService.getBlockchainStatus(chainId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(status);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="fc">&nbsp;            log.error(&quot;Blockchain not found: {}&quot;, chainId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping
+&nbsp;    @Operation(summary = &quot;Get all blockchains&quot;, description = &quot;Retrieves all blockchains&quot;)
+&nbsp;    public ResponseEntity&lt;List&lt;Blockchain&gt;&gt; getAllBlockchains() {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get all blockchains&quot;);</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="fc">&nbsp;        return ResponseEntity.ok(blockchains);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{chainId}/height&quot;)
+&nbsp;    @Operation(summary = &quot;Get blockchain height&quot;, description = &quot;Gets current blockchain height&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getBlockchainHeight(@PathVariable String chainId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to get blockchain height: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            Integer height = blockchainService.getBlockchainHeight(chainId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(height);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="fc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/{chainId}/difficulty&quot;)
+&nbsp;    @Operation(summary = &quot;Update difficulty&quot;, description = &quot;Updates mining difficulty (admin only)&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; updateDifficulty(
+&nbsp;            @PathVariable String chainId,
+&nbsp;            @RequestParam(required = false) Integer difficulty,
+&nbsp;            @RequestBody(required = false) Integer difficultyBody) {
+<b class="pc">&nbsp;        Integer diffValue = difficulty != null ? difficulty : difficultyBody;</b>
+<b class="fc">&nbsp;        log.info(&quot;REST request to update difficulty for blockchain: {} to {}&quot;, chainId, diffValue);</b>
+&nbsp;
+&nbsp;        try {
+<b class="pc">&nbsp;            if (diffValue == null) {</b>
+<b class="nc">&nbsp;                log.error(&quot;Difficulty value is required&quot;);</b>
+<b class="nc">&nbsp;                return ResponseEntity.badRequest().build();</b>
+&nbsp;            }
+<b class="fc">&nbsp;            blockchainService.updateDifficulty(chainId, diffValue);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="fc">&nbsp;            log.error(&quot;Failed to update difficulty&quot;, e);</b>
+<b class="fc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{chainId}/validate&quot;)
+&nbsp;    @Operation(summary = &quot;Validate blockchain&quot;, description = &quot;Validates entire blockchain integrity&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; validateBlockchain(@PathVariable String chainId) {
+<b class="fc">&nbsp;        log.info(&quot;REST request to validate blockchain: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="fc">&nbsp;            boolean isValid = blockchainService.validateBlockchain(chainId);</b>
+<b class="fc">&nbsp;            return ResponseEntity.ok(isValid);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{chainId}/genesis&quot;)
+&nbsp;    @Operation(summary = &quot;Get genesis block&quot;, description = &quot;Retrieves the genesis block&quot;)
+&nbsp;    public ResponseEntity&lt;BlockDTO&gt; getGenesisBlock(@PathVariable String chainId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get genesis block for: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            var genesisBlock = blockchainService.getGenesisBlock(chainId);</b>
+<b class="nc">&nbsp;            var blockDTO = blockService.getBlockByHash(genesisBlock.getHash());</b>
+<b class="nc">&nbsp;            return blockDTO.map(ResponseEntity::ok)</b>
+<b class="nc">&nbsp;                    .orElse(ResponseEntity.notFound().build());</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{chainId}/total-transactions&quot;)
+&nbsp;    @Operation(summary = &quot;Get total transactions&quot;, description = &quot;Gets total transaction count in blockchain&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getTotalTransactions(@PathVariable String chainId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get total transactions for: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            Integer total = blockchainService.getTotalTransactions(chainId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(total);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/{chainId}/sync&quot;)
+&nbsp;    @Operation(summary = &quot;Synchronize blockchain&quot;, description = &quot;Triggers blockchain synchronization&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; synchronizeBlockchain(@PathVariable String chainId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to synchronize blockchain: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            blockchainService.synchronizeBlockchain(chainId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.accepted().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to synchronize blockchain&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/{chainId}/integrity&quot;)
+&nbsp;    @Operation(summary = &quot;Check integrity&quot;, description = &quot;Checks blockchain integrity&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; checkIntegrity(@PathVariable String chainId) {
+<b class="nc">&nbsp;        log.info(&quot;REST request to check integrity for: {}&quot;, chainId);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            boolean hasIntegrity = blockchainService.checkIntegrity(chainId);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(hasIntegrity);</b>
+&nbsp;        } catch (IllegalArgumentException e) {
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    // ===================== DEFAULT ENDPOINTS (No chainId required) =====================
+&nbsp;
+&nbsp;    @GetMapping(&quot;/status&quot;)
+&nbsp;    @Operation(summary = &quot;Get default blockchain status&quot;, description = &quot;Gets status of the default/first blockchain&quot;)
+&nbsp;    public ResponseEntity&lt;BlockchainStatusDTO&gt; getDefaultBlockchainStatus() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get default blockchain status&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                log.warn(&quot;No blockchain found, initializing default blockchain&quot;);</b>
+<b class="nc">&nbsp;                blockchainService.initializeBlockchain(&quot;BioChain&quot;, ConsensusType.PROOF_OF_WORK);</b>
+<b class="nc">&nbsp;                blockchains = blockchainService.getAllBlockchains();</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            BlockchainStatusDTO status = blockchainService.getBlockchainStatus(blockchain.getChainId());</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(status);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to get default blockchain status&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.notFound().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/total-transactions&quot;)
+&nbsp;    @Operation(summary = &quot;Get total transactions&quot;, description = &quot;Gets total transaction count from default blockchain&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getDefaultTotalTransactions() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get total transactions from default blockchain&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.ok(0);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            Integer total = blockchainService.getTotalTransactions(blockchain.getChainId());</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(total);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to get total transactions&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(0);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/default&quot;)
+&nbsp;    @Operation(summary = &quot;Get default blockchain&quot;, description = &quot;Gets the default/first blockchain&quot;)
+&nbsp;    public ResponseEntity&lt;Blockchain&gt; getDefaultBlockchain() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get default blockchain&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;        if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;            log.info(&quot;No blockchain found, initializing default blockchain&quot;);</b>
+<b class="nc">&nbsp;            Blockchain blockchain = blockchainService.initializeBlockchain(&quot;BioChain&quot;, ConsensusType.PROOF_OF_WORK);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(blockchain);</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        return ResponseEntity.ok(blockchains.get(0));</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @PutMapping(&quot;/difficulty&quot;)
+&nbsp;    @Operation(summary = &quot;Update default blockchain difficulty&quot;, description = &quot;Updates mining difficulty for default blockchain&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; updateDefaultDifficulty(
+&nbsp;            @RequestParam(required = false) Integer difficulty,
+&nbsp;            @RequestBody(required = false) Integer difficultyBody) {
+<b class="nc">&nbsp;        Integer diffValue = difficulty != null ? difficulty : difficultyBody;</b>
+<b class="nc">&nbsp;        log.info(&quot;REST request to update difficulty for default blockchain to {}&quot;, diffValue);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            if (diffValue == null) {</b>
+<b class="nc">&nbsp;                log.error(&quot;Difficulty value is required&quot;);</b>
+<b class="nc">&nbsp;                return ResponseEntity.badRequest().build();</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.notFound().build();</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            blockchainService.updateDifficulty(blockchain.getChainId(), diffValue);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to update difficulty&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/height&quot;)
+&nbsp;    @Operation(summary = &quot;Get default blockchain height&quot;, description = &quot;Gets current height of default blockchain&quot;)
+&nbsp;    public ResponseEntity&lt;Integer&gt; getDefaultBlockchainHeight() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to get default blockchain height&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.ok(0);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            Integer height = blockchainService.getBlockchainHeight(blockchain.getChainId());</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(height);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to get blockchain height&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(0);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/validate&quot;)
+&nbsp;    @Operation(summary = &quot;Validate default blockchain&quot;, description = &quot;Validates entire default blockchain integrity&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; validateDefaultBlockchain() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to validate default blockchain&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.ok(true);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            boolean isValid = blockchainService.validateBlockchain(blockchain.getChainId());</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(isValid);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to validate blockchain&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(false);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @GetMapping(&quot;/integrity&quot;)
+&nbsp;    @Operation(summary = &quot;Check default blockchain integrity&quot;, description = &quot;Checks default blockchain integrity&quot;)
+&nbsp;    public ResponseEntity&lt;Boolean&gt; checkDefaultIntegrity() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to check default blockchain integrity&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.ok(true);</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            boolean hasIntegrity = blockchainService.checkIntegrity(blockchain.getChainId());</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(hasIntegrity);</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to check integrity&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.ok(false);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @PostMapping(&quot;/sync&quot;)
+&nbsp;    @Operation(summary = &quot;Synchronize default blockchain&quot;, description = &quot;Triggers default blockchain synchronization&quot;)
+&nbsp;    public ResponseEntity&lt;Void&gt; synchronizeDefaultBlockchain() {
+<b class="nc">&nbsp;        log.info(&quot;REST request to synchronize default blockchain&quot;);</b>
+&nbsp;
+&nbsp;        try {
+<b class="nc">&nbsp;            List&lt;Blockchain&gt; blockchains = blockchainService.getAllBlockchains();</b>
+<b class="nc">&nbsp;            if (blockchains.isEmpty()) {</b>
+<b class="nc">&nbsp;                return ResponseEntity.notFound().build();</b>
+&nbsp;            }
+&nbsp;
+<b class="nc">&nbsp;            Blockchain blockchain = blockchains.get(0);</b>
+<b class="nc">&nbsp;            blockchainService.synchronizeBlockchain(blockchain.getChainId());</b>
+<b class="nc">&nbsp;            return ResponseEntity.accepted().build();</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to synchronize blockchain&quot;, e);</b>
+<b class="nc">&nbsp;            return ResponseEntity.badRequest().build();</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

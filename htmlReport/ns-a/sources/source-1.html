@@ -1,0 +1,165 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">TransactionService$MockitoMock$lmr7FRz9</td>
+  </tr>
+  <tr>
+    <td class="name">TransactionService$MockitoMock$lmr7FRz9$auxiliary$OkJkYJuo</td>
+  </tr>
+  <tr>
+    <td class="name">TransactionService$MockitoMock$lmr7FRz9$auxiliary$QDJNZR4y</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.TransactionRequestDTO;
+&nbsp;import com.wallet.biochain.dto.TransactionResponseDTO;
+&nbsp;import com.wallet.biochain.dto.TransactionHistoryDTO;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;
+&nbsp;import java.math.BigDecimal;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface TransactionService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create and sign a new transaction
+&nbsp;     */
+&nbsp;    TransactionResponseDTO createTransaction(TransactionRequestDTO request);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get transaction by hash
+&nbsp;     */
+&nbsp;    Optional&lt;TransactionResponseDTO&gt; getTransactionByHash(String transactionHash);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get transaction history for a wallet
+&nbsp;     */
+&nbsp;    List&lt;TransactionHistoryDTO&gt; getTransactionHistory(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get sent transactions for a wallet
+&nbsp;     */
+&nbsp;    List&lt;TransactionResponseDTO&gt; getSentTransactions(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get received transactions for a wallet
+&nbsp;     */
+&nbsp;    List&lt;TransactionResponseDTO&gt; getReceivedTransactions(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pending transactions
+&nbsp;     */
+&nbsp;    List&lt;TransactionResponseDTO&gt; getPendingTransactions();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get confirmed transactions
+&nbsp;     */
+&nbsp;    List&lt;TransactionResponseDTO&gt; getConfirmedTransactions();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate transaction
+&nbsp;     */
+&nbsp;    boolean validateTransaction(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Sign transaction
+&nbsp;     */
+&nbsp;    String signTransaction(Transaction transaction, String privateKey);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Verify transaction signature
+&nbsp;     */
+&nbsp;    boolean verifyTransactionSignature(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Broadcast transaction to network
+&nbsp;     */
+&nbsp;    void broadcastTransaction(Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Confirm transaction (add to block)
+&nbsp;     */
+&nbsp;    void confirmTransaction(String transactionHash, Long blockId);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get transaction count for wallet
+&nbsp;     */
+&nbsp;    Long getTransactionCount(String walletAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get total transaction volume
+&nbsp;     */
+&nbsp;    BigDecimal getTotalTransactionVolume();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculate transaction fee
+&nbsp;     */
+&nbsp;    BigDecimal calculateTransactionFee(BigDecimal amount);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

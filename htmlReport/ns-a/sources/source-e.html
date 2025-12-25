@@ -1,0 +1,164 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > BlockService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: BlockService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">BlockService$MockitoMock$BWut1CoJ</td>
+  </tr>
+  <tr>
+    <td class="name">BlockService$MockitoMock$BWut1CoJ$auxiliary$OK0iCPCW</td>
+  </tr>
+  <tr>
+    <td class="name">BlockService$MockitoMock$BWut1CoJ$auxiliary$QiZPQZ3C</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.BlockDTO;
+&nbsp;import com.wallet.biochain.dto.BlockValidationDTO;
+&nbsp;import com.wallet.biochain.entities.Block;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface BlockService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create a new block
+&nbsp;     */
+&nbsp;    Block createBlock(Integer blockIndex, String previousHash, List&lt;Transaction&gt; transactions);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get block by ID
+&nbsp;     */
+&nbsp;    Optional&lt;BlockDTO&gt; getBlockById(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get block by hash
+&nbsp;     */
+&nbsp;    Optional&lt;BlockDTO&gt; getBlockByHash(String hash);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get block by index
+&nbsp;     */
+&nbsp;    Optional&lt;BlockDTO&gt; getBlockByIndex(Integer blockIndex);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get latest block
+&nbsp;     */
+&nbsp;    Optional&lt;BlockDTO&gt; getLatestBlock();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all blocks
+&nbsp;     */
+&nbsp;    List&lt;BlockDTO&gt; getAllBlocks();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blocks in range
+&nbsp;     */
+&nbsp;    List&lt;BlockDTO&gt; getBlocksInRange(Integer startIndex, Integer endIndex);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blocks by miner
+&nbsp;     */
+&nbsp;    List&lt;BlockDTO&gt; getBlocksByMiner(String minerAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculate block hash
+&nbsp;     */
+&nbsp;    String calculateBlockHash(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block
+&nbsp;     */
+&nbsp;    BlockValidationDTO validateBlock(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Validate block chain
+&nbsp;     */
+&nbsp;    boolean validateBlockchain(List&lt;Block&gt; blocks);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Add block to blockchain
+&nbsp;     */
+&nbsp;    Block addBlock(Block block);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get block count
+&nbsp;     */
+&nbsp;    Long getBlockCount();
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get blocks mined by address count
+&nbsp;     */
+&nbsp;    Long getBlocksMinedCount(String minerAddress);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Calculate merkle root for transactions
+&nbsp;     */
+&nbsp;    String calculateMerkleRoot(List&lt;Transaction&gt; transactions);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

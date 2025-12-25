@@ -1,0 +1,132 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > NodeRepository</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.repositories</a>
+</div>
+
+<h1>Coverage Summary for Class: NodeRepository (com.wallet.biochain.repositories)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+</tr>
+  <tr>
+    <td class="name">NodeRepository$MockitoMock$8A6w98tO</td>
+  </tr>
+  <tr>
+    <td class="name">NodeRepository$MockitoMock$8A6w98tO$auxiliary$g6ohqjPR</td>
+  </tr>
+  <tr>
+    <td class="name">NodeRepository$MockitoMock$8A6w98tO$auxiliary$YTAWdHmb</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.repositories;
+&nbsp;
+&nbsp;import com.wallet.biochain.entities.Node;
+&nbsp;import com.wallet.biochain.enums.NodeStatus;
+&nbsp;import com.wallet.biochain.enums.NodeType;
+&nbsp;import org.springframework.data.jpa.repository.JpaRepository;
+&nbsp;import org.springframework.data.jpa.repository.Query;
+&nbsp;import org.springframework.data.repository.query.Param;
+&nbsp;import org.springframework.stereotype.Repository;
+&nbsp;
+&nbsp;import java.time.LocalDateTime;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.List;
+&nbsp;
+&nbsp;@Repository
+&nbsp;public interface NodeRepository extends JpaRepository&lt;Node, Long&gt; {
+&nbsp;
+&nbsp;    Optional&lt;Node&gt; findByNodeId(String nodeId);
+&nbsp;
+&nbsp;    Optional&lt;Node&gt; findByIpAddressAndPort(String ipAddress, Integer port);
+&nbsp;
+&nbsp;    List&lt;Node&gt; findByStatus(NodeStatus status);
+&nbsp;
+&nbsp;    List&lt;Node&gt; findByNodeType(NodeType nodeType);
+&nbsp;
+&nbsp;    List&lt;Node&gt; findByIsTrusted(Boolean isTrusted);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT n FROM Node n WHERE n.status = &#39;ACTIVE&#39; AND n.lastSeen &gt; :since&quot;)
+&nbsp;    List&lt;Node&gt; findActiveNodesSince(@Param(&quot;since&quot;) LocalDateTime since);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT n FROM Node n WHERE n.status = &#39;ACTIVE&#39; ORDER BY n.blockHeight DESC&quot;)
+&nbsp;    List&lt;Node&gt; findActiveNodesOrderByBlockHeight();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT n FROM Node n WHERE n.status = &#39;ACTIVE&#39; ORDER BY n.latencyMs ASC&quot;)
+&nbsp;    List&lt;Node&gt; findActiveNodesOrderByLatency();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT n FROM Node n WHERE n.blockHeight &gt;= :minHeight&quot;)
+&nbsp;    List&lt;Node&gt; findNodesByMinHeight(@Param(&quot;minHeight&quot;) Integer minHeight);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT COUNT(n) FROM Node n WHERE n.status = :status&quot;)
+&nbsp;    Long countByStatus(@Param(&quot;status&quot;) NodeStatus status);
+&nbsp;
+&nbsp;    @Query(&quot;SELECT AVG(n.blockHeight) FROM Node n WHERE n.status = &#39;ACTIVE&#39;&quot;)
+&nbsp;    Double getAverageBlockHeight();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT AVG(n.latencyMs) FROM Node n WHERE n.status = &#39;ACTIVE&#39;&quot;)
+&nbsp;    Double getAverageLatency();
+&nbsp;
+&nbsp;    @Query(&quot;SELECT n FROM Node n WHERE n.lastSeen &lt; :threshold&quot;)
+&nbsp;    List&lt;Node&gt; findStaleNodes(@Param(&quot;threshold&quot;) LocalDateTime threshold);
+&nbsp;
+&nbsp;    boolean existsByNodeId(String nodeId);
+&nbsp;
+&nbsp;    boolean existsByIpAddressAndPort(String ipAddress, Integer port);
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

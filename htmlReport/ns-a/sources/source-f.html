@@ -1,0 +1,134 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionPoolService</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionPoolService (com.wallet.biochain.services)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+</tr>
+<tr>
+  <td class="name">TransactionPoolService</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.TransactionPoolStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.entities.TransactionPool;
+&nbsp;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;
+&nbsp;public interface TransactionPoolService {
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Create transaction pool
+&nbsp;     */
+&nbsp;    TransactionPool createPool(String poolName, Integer maxSize);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pool by ID
+&nbsp;     */
+&nbsp;    Optional&lt;TransactionPool&gt; getPoolById(Long id);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pool by name
+&nbsp;     */
+&nbsp;    Optional&lt;TransactionPool&gt; getPoolByName(String poolName);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pool status
+&nbsp;     */
+&nbsp;    TransactionPoolStatusDTO getPoolStatus(String poolName);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Add transaction to pool
+&nbsp;     */
+&nbsp;    void addTransaction(String poolName, Transaction transaction);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove transaction from pool
+&nbsp;     */
+&nbsp;    void removeTransaction(String poolName, String transactionHash);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pending transactions from pool
+&nbsp;     */
+&nbsp;    List&lt;Transaction&gt; getPendingTransactions(String poolName);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get top transactions by fee
+&nbsp;     */
+&nbsp;    List&lt;Transaction&gt; getTopTransactionsByFee(String poolName, Integer limit);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Clear pool
+&nbsp;     */
+&nbsp;    void clearPool(String poolName);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Check if pool is full
+&nbsp;     */
+&nbsp;    boolean isPoolFull(String poolName);
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get available pools
+&nbsp;     */
+&nbsp;    List&lt;TransactionPool&gt; getAvailablePools();
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>

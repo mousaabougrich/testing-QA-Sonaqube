@@ -1,0 +1,571 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TransactionPoolServiceImpl</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.wallet.biochain.services.impl</a>
+</div>
+
+<h1>Coverage Summary for Class: TransactionPoolServiceImpl (com.wallet.biochain.services.impl)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TransactionPoolServiceImpl</td>
+<td class="coverageStat">
+  <span class="percent">
+    33,3%
+  </span>
+  <span class="absValue">
+    (6/18)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    30,4%
+  </span>
+  <span class="absValue">
+    (14/46)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    33,1%
+  </span>
+  <span class="absValue">
+    (53/160)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TransactionPoolServiceImpl$$SpringCGLIB$$0</td>
+  </tr>
+  <tr>
+    <td class="name">TransactionPoolServiceImpl$PoolStatistics</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    31,6%
+  </span>
+  <span class="absValue">
+    (6/19)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    30,4%
+  </span>
+  <span class="absValue">
+    (14/46)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    32,9%
+  </span>
+  <span class="absValue">
+    (53/161)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.wallet.biochain.services.impl;
+&nbsp;
+&nbsp;import com.wallet.biochain.dto.TransactionPoolStatusDTO;
+&nbsp;import com.wallet.biochain.entities.Transaction;
+&nbsp;import com.wallet.biochain.entities.TransactionPool;
+&nbsp;import com.wallet.biochain.enums.TransactionStatus;
+&nbsp;import com.wallet.biochain.mappers.TransactionPoolMapper;
+&nbsp;import com.wallet.biochain.repositories.TransactionPoolRepository;
+&nbsp;import com.wallet.biochain.repositories.TransactionRepository;
+&nbsp;import com.wallet.biochain.services.TransactionPoolService;
+&nbsp;import lombok.RequiredArgsConstructor;
+&nbsp;import lombok.extern.slf4j.Slf4j;
+&nbsp;import org.springframework.messaging.simp.SimpMessagingTemplate;
+&nbsp;import org.springframework.stereotype.Service;
+&nbsp;import org.springframework.transaction.annotation.Transactional;
+&nbsp;
+&nbsp;import java.util.Comparator;
+&nbsp;import java.util.List;
+&nbsp;import java.util.Optional;
+&nbsp;import java.util.stream.Collectors;
+&nbsp;
+<b class="fc">&nbsp;@Slf4j</b>
+&nbsp;@Service
+&nbsp;@RequiredArgsConstructor
+&nbsp;public class TransactionPoolServiceImpl implements TransactionPoolService {
+&nbsp;
+&nbsp;    private final TransactionPoolRepository poolRepository;
+&nbsp;    private final TransactionRepository transactionRepository;
+&nbsp;    private final TransactionPoolMapper poolMapper;
+&nbsp;    private final SimpMessagingTemplate messagingTemplate;
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public TransactionPool createPool(String poolName, Integer maxSize) {
+<b class="fc">&nbsp;        log.info(&quot;Creating transaction pool: {} with max size: {}&quot;, poolName, maxSize);</b>
+&nbsp;
+&nbsp;        // Check if pool already exists
+<b class="pc">&nbsp;        if (poolRepository.existsByPoolName(poolName)) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Transaction pool already exists: &quot; + poolName);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Validate max size
+<b class="pc">&nbsp;        if (maxSize == null || maxSize &lt;= 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Max size must be greater than 0&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Create pool
+<b class="fc">&nbsp;        TransactionPool pool = new TransactionPool(poolName);</b>
+<b class="fc">&nbsp;        pool.setMaxSize(maxSize);</b>
+<b class="fc">&nbsp;        pool.setIsActive(true);</b>
+&nbsp;
+<b class="fc">&nbsp;        TransactionPool savedPool = poolRepository.save(pool);</b>
+<b class="fc">&nbsp;        log.info(&quot;Transaction pool created successfully: {}&quot;, poolName);</b>
+&nbsp;
+&nbsp;        // Broadcast pool creation event
+&nbsp;        try {
+<b class="fc">&nbsp;            messagingTemplate.convertAndSend(&quot;/topic/pools/created&quot;,</b>
+<b class="fc">&nbsp;                    poolMapper.toStatusDTO(savedPool));</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast pool creation event&quot;, e);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        return savedPool;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;TransactionPool&gt; getPoolById(Long id) {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching transaction pool by ID: {}&quot;, id);</b>
+<b class="nc">&nbsp;        return poolRepository.findById(id);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Optional&lt;TransactionPool&gt; getPoolByName(String poolName) {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching transaction pool by name: {}&quot;, poolName);</b>
+<b class="nc">&nbsp;        return poolRepository.findByPoolName(poolName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public TransactionPoolStatusDTO getPoolStatus(String poolName) {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching pool status for: {}&quot;, poolName);</b>
+&nbsp;
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        return poolMapper.toStatusDTO(pool);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void addTransaction(String poolName, Transaction transaction) {
+&nbsp;        // Validate transaction
+<b class="fc">&nbsp;        if (transaction == null) {</b>
+<b class="fc">&nbsp;            throw new IllegalArgumentException(&quot;Transaction cannot be null&quot;);</b>
+&nbsp;        }
+<b class="fc">&nbsp;        log.debug(&quot;Adding transaction {} to pool: {}&quot;, transaction.getTransactionHash(), poolName);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (transaction.getTransactionHash() == null || transaction.getTransactionHash().isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Transaction hash is required&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Get pool
+<b class="fc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+&nbsp;        // Check if pool is active
+<b class="pc">&nbsp;        if (!pool.getIsActive()) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Pool is not active: &quot; + poolName);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Check if pool is full
+<b class="pc">&nbsp;        if (pool.isFull()) {</b>
+<b class="nc">&nbsp;            throw new IllegalStateException(&quot;Transaction pool is full. Current size: &quot; +</b>
+<b class="nc">&nbsp;                    pool.getCurrentSize() + &quot;, Max size: &quot; + pool.getMaxSize());</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Check if transaction already exists in pool
+<b class="fc">&nbsp;        boolean alreadyInPool = pool.getPendingTransactions().stream()</b>
+<b class="fc">&nbsp;                .anyMatch(tx -&gt; tx.getTransactionHash().equals(transaction.getTransactionHash()));</b>
+&nbsp;
+<b class="pc">&nbsp;        if (alreadyInPool) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Transaction {} already in pool&quot;, transaction.getTransactionHash());</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Set transaction status to PENDING if not already
+<b class="pc">&nbsp;        if (transaction.getStatus() != TransactionStatus.PENDING) {</b>
+<b class="nc">&nbsp;            transaction.setStatus(TransactionStatus.PENDING);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Link transaction to pool
+<b class="fc">&nbsp;        transaction.setTransactionPool(pool);</b>
+<b class="fc">&nbsp;        transactionRepository.save(transaction);</b>
+&nbsp;
+&nbsp;        // Update pool size
+<b class="fc">&nbsp;        pool.setCurrentSize(pool.getCurrentSize() + 1);</b>
+<b class="fc">&nbsp;        poolRepository.save(pool);</b>
+&nbsp;
+<b class="fc">&nbsp;        log.info(&quot;Transaction {} added to pool: {}&quot;, transaction.getTransactionHash(), poolName);</b>
+&nbsp;
+&nbsp;        // Broadcast pool update
+&nbsp;        try {
+<b class="fc">&nbsp;            messagingTemplate.convertAndSend(&quot;/topic/pools/updated&quot;,</b>
+<b class="fc">&nbsp;                    poolMapper.toStatusDTO(pool));</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast pool update&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void removeTransaction(String poolName, String transactionHash) {
+<b class="nc">&nbsp;        log.debug(&quot;Removing transaction {} from pool: {}&quot;, transactionHash, poolName);</b>
+&nbsp;
+&nbsp;        // Validate inputs
+<b class="nc">&nbsp;        if (transactionHash == null || transactionHash.isEmpty()) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Transaction hash is required&quot;);</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Get pool
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+&nbsp;        // Find transaction
+<b class="nc">&nbsp;        Transaction transaction = transactionRepository.findByTransactionHash(transactionHash)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Transaction not found: &quot; + transactionHash));</b>
+&nbsp;
+&nbsp;        // Check if transaction is in this pool
+<b class="nc">&nbsp;        if (transaction.getTransactionPool() == null ||</b>
+<b class="nc">&nbsp;                !transaction.getTransactionPool().getId().equals(pool.getId())) {</b>
+<b class="nc">&nbsp;            log.warn(&quot;Transaction {} is not in pool: {}&quot;, transactionHash, poolName);</b>
+&nbsp;            return;
+&nbsp;        }
+&nbsp;
+&nbsp;        // Remove transaction from pool
+<b class="nc">&nbsp;        transaction.setTransactionPool(null);</b>
+<b class="nc">&nbsp;        transactionRepository.save(transaction);</b>
+&nbsp;
+&nbsp;        // Update pool size
+<b class="nc">&nbsp;        pool.setCurrentSize(Math.max(0, pool.getCurrentSize() - 1));</b>
+<b class="nc">&nbsp;        poolRepository.save(pool);</b>
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Transaction {} removed from pool: {}&quot;, transactionHash, poolName);</b>
+&nbsp;
+&nbsp;        // Broadcast pool update
+&nbsp;        try {
+<b class="nc">&nbsp;            messagingTemplate.convertAndSend(&quot;/topic/pools/updated&quot;,</b>
+<b class="nc">&nbsp;                    poolMapper.toStatusDTO(pool));</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast pool update&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Transaction&gt; getPendingTransactions(String poolName) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching pending transactions from pool: {}&quot;, poolName);</b>
+&nbsp;
+<b class="fc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Transaction&gt; pending = pool.getPendingTransactions();</b>
+<b class="fc">&nbsp;        log.debug(&quot;Found {} pending transactions in pool: {}&quot;, pending.size(), poolName);</b>
+&nbsp;
+<b class="fc">&nbsp;        return pending;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;Transaction&gt; getTopTransactionsByFee(String poolName, Integer limit) {
+<b class="fc">&nbsp;        log.debug(&quot;Fetching top {} transactions by fee from pool: {}&quot;, limit, poolName);</b>
+&nbsp;
+<b class="pc">&nbsp;        if (limit == null || limit &lt;= 0) {</b>
+<b class="nc">&nbsp;            throw new IllegalArgumentException(&quot;Limit must be greater than 0&quot;);</b>
+&nbsp;        }
+&nbsp;
+<b class="fc">&nbsp;        List&lt;Transaction&gt; pending = getPendingTransactions(poolName);</b>
+&nbsp;
+&nbsp;        // Sort by fee (descending) and timestamp (ascending for same fee)
+<b class="fc">&nbsp;        List&lt;Transaction&gt; topTransactions = pending.stream()</b>
+<b class="pc">&nbsp;                .filter(tx -&gt; tx.getFee() != null)</b>
+<b class="fc">&nbsp;                .sorted(Comparator.comparing(Transaction::getFee).reversed()</b>
+<b class="fc">&nbsp;                        .thenComparing(Transaction::getTimestamp))</b>
+<b class="fc">&nbsp;                .limit(limit)</b>
+<b class="fc">&nbsp;                .collect(Collectors.toList());</b>
+&nbsp;
+<b class="fc">&nbsp;        log.debug(&quot;Returning {} top transactions by fee&quot;, topTransactions.size());</b>
+<b class="fc">&nbsp;        return topTransactions;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional
+&nbsp;    public void clearPool(String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;Clearing transaction pool: {}&quot;, poolName);</b>
+&nbsp;
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Transaction&gt; transactions = pool.getPendingTransactions();</b>
+<b class="nc">&nbsp;        int clearedCount = 0;</b>
+&nbsp;
+&nbsp;        // Remove all transactions from pool
+<b class="nc">&nbsp;        for (Transaction tx : transactions) {</b>
+<b class="nc">&nbsp;            tx.setTransactionPool(null);</b>
+<b class="nc">&nbsp;            transactionRepository.save(tx);</b>
+<b class="nc">&nbsp;            clearedCount++;</b>
+&nbsp;        }
+&nbsp;
+&nbsp;        // Reset pool size
+<b class="nc">&nbsp;        pool.setCurrentSize(0);</b>
+<b class="nc">&nbsp;        poolRepository.save(pool);</b>
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Cleared {} transactions from pool: {}&quot;, clearedCount, poolName);</b>
+&nbsp;
+&nbsp;        // Broadcast pool cleared event
+&nbsp;        try {
+<b class="nc">&nbsp;            messagingTemplate.convertAndSend(&quot;/topic/pools/cleared&quot;,</b>
+<b class="nc">&nbsp;                    poolMapper.toStatusDTO(pool));</b>
+&nbsp;        } catch (Exception e) {
+<b class="nc">&nbsp;            log.error(&quot;Failed to broadcast pool cleared event&quot;, e);</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public boolean isPoolFull(String poolName) {
+<b class="fc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="fc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="fc">&nbsp;        boolean isFull = pool.isFull();</b>
+<b class="fc">&nbsp;        log.debug(&quot;Pool {} is full: {}&quot;, poolName, isFull);</b>
+&nbsp;
+<b class="fc">&nbsp;        return isFull;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    @Override
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionPool&gt; getAvailablePools() {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching available transaction pools&quot;);</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;TransactionPool&gt; availablePools = poolRepository.findAvailablePools();</b>
+<b class="nc">&nbsp;        log.debug(&quot;Found {} available pools&quot;, availablePools.size());</b>
+&nbsp;
+<b class="nc">&nbsp;        return availablePools;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get all active pools
+&nbsp;     */
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public List&lt;TransactionPool&gt; getAllActivePools() {
+<b class="nc">&nbsp;        log.debug(&quot;Fetching all active transaction pools&quot;);</b>
+<b class="nc">&nbsp;        return poolRepository.findByIsActive(true);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Activate a pool
+&nbsp;     */
+&nbsp;    @Transactional
+&nbsp;    public void activatePool(String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;Activating pool: {}&quot;, poolName);</b>
+&nbsp;
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        pool.setIsActive(true);</b>
+<b class="nc">&nbsp;        poolRepository.save(pool);</b>
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Pool activated: {}&quot;, poolName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Deactivate a pool
+&nbsp;     */
+&nbsp;    @Transactional
+&nbsp;    public void deactivatePool(String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;Deactivating pool: {}&quot;, poolName);</b>
+&nbsp;
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        pool.setIsActive(false);</b>
+<b class="nc">&nbsp;        poolRepository.save(pool);</b>
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Pool deactivated: {}&quot;, poolName);</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pool capacity (percentage used)
+&nbsp;     */
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public Double getPoolCapacity(String poolName) {
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        if (pool.getMaxSize() == 0) {</b>
+<b class="nc">&nbsp;            return 0.0;</b>
+&nbsp;        }
+&nbsp;
+<b class="nc">&nbsp;        double capacity = (pool.getCurrentSize().doubleValue() / pool.getMaxSize().doubleValue()) * 100;</b>
+<b class="nc">&nbsp;        log.debug(&quot;Pool {} capacity: {:.2f}%&quot;, poolName, capacity);</b>
+&nbsp;
+<b class="nc">&nbsp;        return capacity;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Remove confirmed transactions from pool
+&nbsp;     */
+&nbsp;    @Transactional
+&nbsp;    public int removeConfirmedTransactions(String poolName) {
+<b class="nc">&nbsp;        log.info(&quot;Removing confirmed transactions from pool: {}&quot;, poolName);</b>
+&nbsp;
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Transaction&gt; transactions = pool.getPendingTransactions();</b>
+<b class="nc">&nbsp;        int removedCount = 0;</b>
+&nbsp;
+<b class="nc">&nbsp;        for (Transaction tx : transactions) {</b>
+<b class="nc">&nbsp;            if (tx.getStatus() == TransactionStatus.CONFIRMED) {</b>
+<b class="nc">&nbsp;                tx.setTransactionPool(null);</b>
+<b class="nc">&nbsp;                transactionRepository.save(tx);</b>
+<b class="nc">&nbsp;                removedCount++;</b>
+&nbsp;            }
+&nbsp;        }
+&nbsp;
+&nbsp;        // Update pool size
+<b class="nc">&nbsp;        pool.setCurrentSize(Math.max(0, pool.getCurrentSize() - removedCount));</b>
+<b class="nc">&nbsp;        poolRepository.save(pool);</b>
+&nbsp;
+<b class="nc">&nbsp;        log.info(&quot;Removed {} confirmed transactions from pool: {}&quot;, removedCount, poolName);</b>
+<b class="nc">&nbsp;        return removedCount;</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Get pool statistics
+&nbsp;     */
+&nbsp;    @Transactional(readOnly = true)
+&nbsp;    public PoolStatistics getPoolStatistics(String poolName) {
+<b class="nc">&nbsp;        TransactionPool pool = poolRepository.findByPoolName(poolName)</b>
+<b class="nc">&nbsp;                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Pool not found: &quot; + poolName));</b>
+&nbsp;
+<b class="nc">&nbsp;        List&lt;Transaction&gt; transactions = pool.getPendingTransactions();</b>
+&nbsp;
+<b class="nc">&nbsp;        int totalTransactions = transactions.size();</b>
+<b class="nc">&nbsp;        double avgFee = transactions.stream()</b>
+<b class="nc">&nbsp;                .filter(tx -&gt; tx.getFee() != null)</b>
+<b class="nc">&nbsp;                .mapToDouble(tx -&gt; tx.getFee().doubleValue())</b>
+<b class="nc">&nbsp;                .average()</b>
+<b class="nc">&nbsp;                .orElse(0.0);</b>
+&nbsp;
+<b class="nc">&nbsp;        double totalValue = transactions.stream()</b>
+<b class="nc">&nbsp;                .filter(tx -&gt; tx.getAmount() != null)</b>
+<b class="nc">&nbsp;                .mapToDouble(tx -&gt; tx.getAmount().doubleValue())</b>
+<b class="nc">&nbsp;                .sum();</b>
+&nbsp;
+<b class="nc">&nbsp;        return new PoolStatistics(</b>
+&nbsp;                totalTransactions,
+<b class="nc">&nbsp;                pool.getMaxSize(),</b>
+&nbsp;                avgFee,
+&nbsp;                totalValue,
+<b class="nc">&nbsp;                pool.getIsActive()</b>
+&nbsp;        );
+&nbsp;    }
+&nbsp;
+&nbsp;    /**
+&nbsp;     * Inner class for pool statistics
+&nbsp;     */
+<b class="nc">&nbsp;    public record PoolStatistics(</b>
+&nbsp;            int totalTransactions,
+&nbsp;            int maxCapacity,
+&nbsp;            double averageFee,
+&nbsp;            double totalValue,
+&nbsp;            boolean isActive
+&nbsp;    ) {}
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-12-25 22:18</div>
+</div>
+</body>
+</html>
