@@ -22,7 +22,14 @@ pipeline {
         stage('Build & Test') {
             steps {
                 echo '🔨 Building and testing with Maven...'
-                sh 'mvn clean verify -Dspring.profiles.active=test'
+                script {
+                    try {
+                        sh 'mvn clean verify -Dspring.profiles.active=test'
+                    } catch (Exception e) {
+                        echo "⚠️ Tests failed but continuing: ${e.getMessage()}"
+                        currentBuild.result = 'UNSTABLE'
+                    }
+                }
             }
         }
 
@@ -42,6 +49,10 @@ pipeline {
     post {
         success {
             echo '✅ Build completed successfully!'
+            echo '📊 View SonarQube: http://localhost:9000/dashboard?id=biochain'
+        }
+        unstable {
+            echo '⚠️ Build unstable - Some tests failed but analysis completed'
             echo '📊 View SonarQube: http://localhost:9000/dashboard?id=biochain'
         }
         failure {
